@@ -1,0 +1,30 @@
+@(list: Seq[model.CueLine])
+
+@main("RhysSoft - Line Learning") {
+
+    <div class="container">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Cue</th>
+                        <th>Line</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for(pr <- list){
+                    <tr>
+                        <td>@{pr.cue}</td>
+                        <td>@{pr.line}</td>
+                        <td><button class="btn btn-group-sm btn-default">Edit...</button></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <button class="btn btn-primary">Add...</button>
+        </div>
+    </div>
+}
