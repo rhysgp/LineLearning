@@ -1,0 +1,22 @@
+@import model.CueLine
+@(lines: Seq[CueLine])
+@main("RhysSoft - Line Learning") {
+    <div class="container">
+        <!-- Show the current settings -->
+
+        <form>
+            <textarea id="settings" name="settings">
+                {lines:[
+                @for(cl <- lines) {
+                    {
+                        "id":"@{cl.id}"
+                        "cue":"@{cl.cue}",
+                        "line":"@{cl.line}"
+                    }
+                }
+                ]}
+            </textarea>
+        </form>
+
+    </div>
+}
