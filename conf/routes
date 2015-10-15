@@ -6,6 +6,8 @@
 GET     /                          controllers.PromptController.index
 GET     /list                      controllers.PromptController.list
 GET     /add                       controllers.PromptController.add
+GET     /lines                     controllers.LinesController.lines
+POST    /lines                     controllers.LinesController.saveLines
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file              controllers.Assets.versioned(path="/public", file: Asset)
