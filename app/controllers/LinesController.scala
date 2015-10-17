@@ -4,7 +4,7 @@ import model.{CueLine, Lines}
 import play.api.libs.json._
 import play.api.mvc._
 import play.api.libs.functional.syntax._
-import services.DbService
+import services.{User, DbService}
 import support.CookieHelper._
 
 
@@ -27,7 +27,7 @@ class LinesController extends Controller {
       request.cookies.get(COOKIE_NAME) match {
 
         case Some(cookie) =>
-          Ok(views.html.list(DbService.loadCueLines(cookie.value)))
+          Ok(views.html.list(DbService.loadCueLines(User.fromString(cookie.value))))
 
         case None =>
           Unauthorized("Don't know who you are.")
@@ -42,8 +42,7 @@ class LinesController extends Controller {
         request.body.validate[Lines].asOpt match {
 
           case Some(lines) =>
-            DbService.setCueLines("", lines)
-            Ok(views.html.list(DbService.loadCueLines(cookie.value)))
+            Ok(views.html.list(DbService.loadCueLines(User.fromString(cookie.value))))
 
           case None =>
             BadRequest("No lines found")
