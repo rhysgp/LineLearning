@@ -5,6 +5,7 @@ import play.api.data._
 import play.api.data.Forms._
 import play.api.i18n.{MessagesApi, I18nSupport}
 import play.api.mvc._
+import services.{User, DbService}
 
 class UserController @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
 
@@ -16,7 +17,7 @@ class UserController @Inject()(val messagesApi: MessagesApi) extends Controller 
     registerForm.bindFromRequest.fold(
       formWithErrors =>
         BadRequest(views.html.register(formWithErrors)),
-      registerData   =>
+      registerData   => {
 
         // actually do the register:
 
@@ -26,9 +27,10 @@ class UserController @Inject()(val messagesApi: MessagesApi) extends Controller 
         //    i) Find the existing user's GUID and send them an email; OR
         //   ii) Create a new user, generating the GUID, and send them an email
 
+        val user = DbService.addOrFindUser(registerData.email)
 
-
-        Ok(views.html.register(registerForm.fill(registerData)))
+        Ok(views.html.lines(DbService.loadCueLines(user)))
+      }
     )
   }
 

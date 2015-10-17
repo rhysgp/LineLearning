@@ -10,7 +10,7 @@ trait DbService {
   def saveCueLine(cl: CueLine): Unit
   def setCueLines(userId: User, lines: Lines): Unit
 
-  def addUser(email: String): User
+  def addOrFindUser(email: String): User
 }
 
 object InMemoryDbService extends DbService {
@@ -44,10 +44,14 @@ object InMemoryDbService extends DbService {
     })
   }
   
-  def addUser(emailAddress: String): User = {
-    val user = User(UUID.randomUUID().toString, emailAddress)
-    users = users :+ user
-    user
+  def addOrFindUser(emailAddress: String): User = {
+    users
+      .find(_.email == emailAddress)
+      .getOrElse {
+        val user = User(UUID.randomUUID().toString, emailAddress)
+        users = users :+ user
+        user
+      }
   }
 }
 
@@ -57,7 +61,7 @@ object DbService extends DbService {
   def saveCueLine(cl: CueLine) = InMemoryDbService.saveCueLine(cl)
   def setCueLines(userId: User, lines: Lines) = InMemoryDbService.setCueLines(userId, lines)
 
-  def addUser(email: String) = InMemoryDbService.addUser(email)
+  def addOrFindUser(email: String) = InMemoryDbService.addOrFindUser(email)
 }
 
 
