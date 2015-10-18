@@ -20,7 +20,7 @@ class PromptController extends Controller {
         val lines = DbService.loadCueLines(user)
 
         if (lines.nonEmpty) {
-          Ok(views.html.prompt(1, lines.head.cue, lines.head.line))
+          Ok(views.html.prompt(0, lines.head.cue, lines.head.line))
         } else {
           Redirect(routes.PromptController.edit())
         }
