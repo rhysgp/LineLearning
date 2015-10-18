@@ -1,0 +1,103 @@
+@(cue: String, line: String)
+@main("Cues") {
+
+  <div class="container">
+    <div id="inputPrompt" data-line="@line">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="cue">@cue</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div id="formGroup" class="from-group has-feedback">
+          <div class="col-md-12">
+            <div class="input-group">
+              <span class="input-group-addon"><span class="glyphicon glyphicon-menu-right"></span></span>
+              <input type="text" id="line" class="form-control" />
+              <span id="feedbackIcon" class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div id="answer" class="answer hidden">@line</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <button id="nextButton" class="btn btn-default disabled">Next</button>
+          <button id="showHideAnswerButton" class="btn btn-default" data-type="show">Show</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+
+    function showNormal() {
+      $("#feedbackIcon").addClass("hidden");
+      var $formGroup = $("#formGroup");
+      $formGroup.removeClass("has-warning");
+      $formGroup.removeClass("has-error");
+      $formGroup.removeClass("has-success");
+    }
+
+    function showCorrect() {
+      $("#feedbackIcon").removeClass("hidden");
+      var $formGroup = $("#formGroup");
+      $formGroup.removeClass("has-warning");
+      $formGroup.removeClass("has-error");
+      $formGroup.addClass("has-success");
+    }
+
+    function showWarning() {
+      $("#feedbackIcon").removeClass("hidden");
+      var $formGroup = $("#formGroup");
+      $formGroup.removeClass("has-success");
+      $formGroup.removeClass("has-error");
+      $formGroup.addClass("has-warning");
+    }
+
+    function showError() {
+      $("#feedbackIcon").addClass("hidden");
+      var $formGroup = $("#formGroup");
+      $formGroup.removeClass("has-success");
+      $formGroup.removeClass("has-warning");
+      $formGroup.addClass("has-error");
+    }
+
+    $("#line").keyup(event, function() {
+      var expected = $("#inputPrompt").data("line");
+      var actual = $("#line").val();
+
+      if (actual.length === 0) {
+        showNormal();
+      } else if (actual === expected) {
+        showCorrect();
+      } else if (expected.startsWith(actual)) {
+        showWarning();
+      } else {
+        showError();
+      }
+    });
+
+    $("#showHideAnswerButton").click(function() {
+      var $showHideAnswerButton = $("#showHideAnswerButton");
+      var type = $showHideAnswerButton.data("type");
+      if (type === "show") {
+        $("#answer").removeClass("hidden");
+        $showHideAnswerButton.data("type", "hide");
+        $showHideAnswerButton.html("Hide");
+      } else {
+        $("#answer").addClass("hidden");
+        $showHideAnswerButton.data("type", "show");
+        $showHideAnswerButton.html("Show");
+      }
+    });
+
+  </script>
+}

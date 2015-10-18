@@ -5,7 +5,8 @@ import play.api.data._
 import play.api.data.Forms._
 import play.api.i18n.{MessagesApi, I18nSupport}
 import play.api.mvc._
-import services.{User, DbService}
+import services.DbService
+import support.CookieHelper
 
 class UserController @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
 
@@ -29,7 +30,10 @@ class UserController @Inject()(val messagesApi: MessagesApi) extends Controller 
 
         val user = DbService.addOrFindUser(registerData.email)
 
-        Ok(views.html.lines(DbService.loadCueLines(user)))
+        Redirect(routes.PromptController.index())
+          .withCookies(Cookie(CookieHelper.COOKIE_NAME, user.toString))
+
+//        Ok(views.html.lines(DbService.loadCueLines(user)))
       }
     )
   }
