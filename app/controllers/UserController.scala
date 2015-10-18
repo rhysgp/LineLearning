@@ -23,17 +23,14 @@ class UserController @Inject()(val messagesApi: MessagesApi) extends Controller 
         // actually do the register:
 
         //  a) Could check email address existence and error if it doesn't exist
-
         //  b) If email address OK, check to see if it is an existing user, and either:
-        //    i) Find the existing user's GUID and send them an email; OR
-        //   ii) Create a new user, generating the GUID, and send them an email
+        //     i) Find the existing user's GUID and send them an email; OR
+        //    ii) Create a new user, generating the GUID, and send them an email
 
         val user = DbService.addOrFindUser(registerData.email)
 
         Redirect(routes.PromptController.index())
           .withCookies(Cookie(CookieHelper.COOKIE_NAME, user.toString))
-
-//        Ok(views.html.lines(DbService.loadCueLines(user)))
       }
     )
   }

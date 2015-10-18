@@ -1,9 +1,25 @@
-
+@import model.CueLine
+@(form: Form[AddCueLine], lines: Seq[CueLine])
 @main("Add cue / line") {
 
     <div class="container">
         <div id="inputPrompt">
-            <form id="editForm" action="">
+
+            @for(line <- lines) {
+                <div class="row">
+                    <div class="col-md-5">
+                        @line.cue
+                    </div>
+                    <div class="col-md-1">
+
+                    </div>
+                    <div class="col-md-5">
+                        @line.line
+                    </div>
+                </div>
+            }
+
+            <form id="editForm" method="post" action="@routes.PromptController.add()">
                 <h2>Edit cue</h2>
                 <label for="prompt" class="sr-only">Cue</label>
                 <textarea id="cue" name="cue" class="form-control" placeholder="Cue..."></textarea>
