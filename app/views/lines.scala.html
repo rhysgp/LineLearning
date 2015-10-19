@@ -9,9 +9,9 @@
                 {lines:[
                 @for(cl <- lines) {
                     {
-                        "id":"@{cl.id}"
-                        "cue":"@{cl.cue}",
-                        "line":"@{cl.line}"
+                        "id":"@cl.cueLineId"
+                        "cue":"@cl.cue",
+                        "line":"@cl.line"
                     }
                 }
                 ]}
