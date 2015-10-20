@@ -2,12 +2,14 @@ package controllers
 
 import java.util.UUID
 
-import model.CueLine
+import model.{CueLineId, SceneName, CueLine}
 import play.api.data._
 import play.api.data.Forms._
 import play.api.mvc.{Action, _}
 import services.{User, DbService}
 import support.CookieHelper._
+
+import scala.util.{Failure, Success}
 
 class PromptController extends Controller {
 
@@ -16,14 +18,15 @@ class PromptController extends Controller {
 
       case Some(cookie) =>
 
-        val user = User.fromString(cookie.value)
-        val lines = DbService.loadCueLines(user)
-
-        if (lines.nonEmpty) {
-          Ok(views.html.prompt(0, lines.head.cue, lines.head.line))
-        } else {
-          Redirect(routes.PromptController.edit())
-        }
+//        val user = User.fromString(cookie.value)
+//        val lines = DbService.loadCueLines(user)
+//
+//        if (lines.nonEmpty) {
+//          Ok(views.html.prompt(0, lines.head.cue, lines.head.line))
+//        } else {
+//          Redirect(routes.PromptController.edit())
+//        }
+        Ok("Not implemented")
 
       case None =>
         Redirect(routes.UserController.register())
@@ -35,14 +38,20 @@ class PromptController extends Controller {
 
       case Some(cookie) =>
         val user = User.fromString(cookie.value)
-        val lines = DbService.loadCueLines(user)
 
-        if (index >= 0 && index < lines.length) {
-          val cueLine = lines(index)
-          Ok(views.html.prompt(index, cueLine.cue, cueLine.line))
-        } else {
-          Redirect(routes.PromptController.index())
+        DbService.loadCueLines(SceneName(User("dummy", "dummy"), "dummy")) match {
+          case Success(lines) =>
+            if (index >= 0 && index < lines.length) {
+              val cueLine = lines(index)
+              Ok(views.html.prompt(index, cueLine.cue, cueLine.line))
+            } else {
+              Redirect(routes.PromptController.index())
+            }
+
+          case Failure(t) =>
+            Ok("Failed to load cue lines...")
         }
+
 
       case None =>
         Redirect(routes.UserController.register())
@@ -53,7 +62,14 @@ class PromptController extends Controller {
     request.cookies.get(COOKIE_NAME) match {
 
       case Some(cookie) =>
-        Ok(views.html.list(DbService.loadCueLines(User.fromString(cookie.value))))
+
+        DbService.loadCueLines(SceneName(User("dummy", "dummy"), "dummy")) match {
+          case Success(lines) =>
+            Ok(views.html.list(lines))
+
+          case Failure(t) =>
+            Ok("Failed to load cue lines...")
+        }
 
       case None =>
         Redirect(routes.UserController.register())
@@ -67,9 +83,14 @@ class PromptController extends Controller {
       case Some(cookie) =>
 
         val user = User.fromString(cookie.value)
-        val lines = DbService.loadCueLines(user)
 
-        Ok(views.html.add(addForm, lines))
+        DbService.loadCueLines(SceneName(User("dummy", "dummy"), "dummy")) match {
+          case Success(lines) =>
+            Ok(views.html.add(addForm, lines))
+
+          case Failure(t) =>
+            Ok("Failed to load cue lines...")
+        }
 
       case None =>
         Redirect(routes.UserController.register())
@@ -86,11 +107,30 @@ class PromptController extends Controller {
 
         addForm.bindFromRequest()(request).fold(
           formWithErrors => {
-            BadRequest(views.html.add(formWithErrors, DbService.loadCueLines(user)))
+
+
+            DbService.loadCueLines(SceneName(User("dummy", "dummy"), "dummy")) match {
+              case Success(lines) =>
+                BadRequest(views.html.add(formWithErrors, lines))
+
+              case Failure(t) =>
+                Ok("Failed to load cue lines...")
+            }
+
           },
           formData => {
-            DbService.addCueLine(user, CueLine(UUID.randomUUID().toString, formData.cue, formData.line))
-            Ok(views.html.add(addForm, DbService.loadCueLines(user)))
+
+            val scene = SceneName(User("dummy", "dummy"), "dummy")
+            DbService.addCueLine(scene, CueLine(CueLineId.create(), formData.cue, formData.line))
+            DbService.loadCueLines(scene) match {
+              case Success(lines) =>
+                Ok(views.html.add(addForm, lines))
+
+              case Failure(t) =>
+                Ok("Failed to load cue lines...")
+            }
+
+
           }
         )
 

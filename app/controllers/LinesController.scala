@@ -1,11 +1,13 @@
 package controllers
 
-import model.{CueLine, Lines}
+import model.{CueLineId, SceneName, CueLine, Lines}
 import play.api.libs.json._
 import play.api.mvc._
 import play.api.libs.functional.syntax._
 import services.{User, DbService}
 import support.CookieHelper._
+
+import scala.util.{Failure, Success}
 
 
 /*
@@ -20,45 +22,69 @@ import support.CookieHelper._
 
 class LinesController extends Controller {
 
-  def lines() = Action {
-
-    implicit request =>
-
-      request.cookies.get(COOKIE_NAME) match {
-
-        case Some(cookie) =>
-          Ok(views.html.list(DbService.loadCueLines(User.fromString(cookie.value))))
-
-        case None =>
-          Unauthorized("Don't know who you are.")
-      }
-  }
-
-  def saveLines = Action(BodyParsers.parse.json) { request =>
-
-    request.cookies.get(COOKIE_NAME) match {
-
-      case Some(cookie) =>
-        request.body.validate[Lines].asOpt match {
-
-          case Some(lines) =>
-            Ok(views.html.list(DbService.loadCueLines(User.fromString(cookie.value))))
-
-          case None =>
-            BadRequest("No lines found")
-        }
-
-      case None =>
-        Unauthorized("Don't know who you are.")
-    }
-  }
-
-  implicit val readCueLine: Reads[CueLine] = (
-    (JsPath \ "id").read[String] and (JsPath \ "cue").read[String] and (JsPath \ "line").read[String]
-  )(CueLine.apply _)
-
-  implicit val readLines: Reads[Lines] = (
-    (JsPath \ "nowt").read[String] and (JsPath \ "lines").read[Seq[CueLine]]
-  )(Lines.apply _)
+//  def lines() = Action {
+//
+//    implicit request =>
+//
+//      request.cookies.get(COOKIE_NAME) match {
+//
+//        case Some(cookie) =>
+//
+//          val user = User.fromString(cookie.value)
+//          DbService.loadCueLines(SceneName(user, "dummy")) match {
+//
+//            case Success(lines) =>
+//              Ok(views.html.list(lines))
+//
+//            case Failure(t) =>
+//              BadRequest(views.html.error(t))
+//
+//          }
+//
+//
+//
+//        case None =>
+//          Unauthorized("Don't know who you are.")
+//      }
+//  }
+//
+//  def saveLines = Action(BodyParsers.parse.json) { request =>
+//
+//    request.cookies.get(COOKIE_NAME) match {
+//
+//      case Some(cookie) =>
+//        request.body.validate[Lines].asOpt match {
+//
+//          case Some(lines) =>
+//
+//            val user = User.fromString(cookie.value)
+//            DbService.loadCueLines(SceneName(user, "dummy")) match {
+//
+//              case Success(cueLines) =>
+//                Ok(views.html.list(cueLines))
+//
+//              case Failure(t) =>
+//                BadRequest(views.html.error(t))
+//            }
+//
+//          case None =>
+//            BadRequest("No lines found")
+//        }
+//
+//      case None =>
+//        Unauthorized("Don't know who you are.")
+//    }
+//  }
+//
+//  implicit val readCueLineId: Reads[CueLineId] = ((JsPath \ "id").read[String])(CueLineId.apply _)
+//
+//
+//  implicit val readCueLine: Reads[CueLine] = (
+//    (JsPath \ "id").read[CueLineId] and (JsPath \ "cue").read[String] and (JsPath \ "line").read[String]
+//  )(CueLine.apply _)
+//
+//  implicit val readLines: Reads[Lines] = (
+//    (JsPath \ "nowt").read[String] and (JsPath \ "lines").read[Seq[CueLine]]
+//  )(Lines.apply _)
 
 }

@@ -18,7 +18,7 @@ trait DbService {
   def removeCueLine(scene: SceneName, cl: CueLine): Try[Seq[CueLine]]
   def saveCueLine(cl: CueLine): Try[Seq[CueLine]]
 
-  def setCueLines(scene: SceneName, lines: Lines): Unit
+  def setCueLines(scene: SceneName, newLines: Lines): Try[Seq[CueLine]]
 
   def addOrFindUser(email: String): Try[User]
 }
@@ -110,7 +110,7 @@ object DbService extends DbService {
   override def removeCueLine(scene: SceneName, cl: CueLine): Try[Seq[CueLine]] = InMemoryDbService.removeCueLine(scene, cl)
   override def removeScene(scene: SceneName): Try[SceneName] = InMemoryDbService.removeScene(scene)
   override def addCueLine(scene: SceneName, cl: CueLine): Try[Seq[CueLine]] = InMemoryDbService.addCueLine(scene, cl)
-  override def setCueLines(scene: SceneName, lines: Lines): Unit = InMemoryDbService.setCueLines(scene, lines)
+  override def setCueLines(scene: SceneName, newLines: Lines): Try[Seq[CueLine]] = InMemoryDbService.setCueLines(scene, newLines)
   override def saveCueLine(cl: CueLine): Try[Seq[CueLine]] = InMemoryDbService.saveCueLine(cl)
   override def loadCueLines(scene: SceneName): Try[Seq[CueLine]] = InMemoryDbService.loadCueLines(scene)
   override def addScene(user: User, sceneName: String): Try[SceneName] = InMemoryDbService.addScene(user, sceneName)
