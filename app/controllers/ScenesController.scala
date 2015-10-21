@@ -22,7 +22,7 @@ class ScenesController extends Controller {
         DbService.loadScenes(user) match {
 
           case Success(scenes) =>
-            Ok(views.html.scenes(scenes))
+            Ok(views.html.scenes(scenes, sceneForm))
 
           case Failure(t) =>
             BadRequest(views.html.error(t))
@@ -39,43 +39,37 @@ class ScenesController extends Controller {
     request.cookies.get(COOKIE_NAME) match {
 
       case Some(cookie) =>
+        val user = User.fromString(cookie.value)
 
         sceneForm.bindFromRequest.fold(
           formWithErrors => {
-            BadRequest()
+            BadRequest(views.html.scenes(loadScenes(user), formWithErrors))
           },
           sceneData => {
-            val user = User.fromString(cookie.value)
-
-            DbService.loadScenes(user) match {
-
-              case Success(scenes) =>
-
-
-
-                Ok(views.html.scenes(scenes))
-
-              case Failure(t) =>
-                BadRequest(views.html.error(t))
-
-            }
-
+            DbService.addScene(user, sceneData.sceneName)
+            Redirect(routes.ScenesController.list())
+//            Ok(views.html.scenes(loadScenes(user), sceneForm))
           }
         )
-
 
       case None =>
         Redirect(routes.UserController.register())
     }
   }
 
+  private def loadScenes(user: User) =
+    DbService.loadScenes(user) match {
+      case Success(s) => s
+      case Failure(t) => Seq()
+    }
+
   val sceneForm = Form(
     mapping(
-      "name" -> nonEmptyText
+      "sceneName" -> nonEmptyText
     )(SceneFormData.apply)(SceneFormData.unapply)
   )
 
 }
 
-case class SceneFormData(name: String)
+case class SceneFormData(sceneName: String)
 

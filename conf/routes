@@ -3,7 +3,7 @@
 # ~~~~
 
 # Home page
-GET     /                          controllers.ScenesController.list
+GET     /                          controllers.Application.index
 GET     /list                      controllers.PromptController.list
 GET     /edit                      controllers.PromptController.edit
 POST    /edit                      controllers.PromptController.add

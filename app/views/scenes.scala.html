@@ -1,4 +1,4 @@
-@(scenes: Seq[model.SceneName], sceneForm: Option[Form[SceneFormData]])
+@(scenes: Seq[model.SceneName], sceneForm: Form[SceneFormData])
 @main("Scenes") {
     <div class="container">
         <div class="table-responsive">
@@ -13,7 +13,7 @@
                 @for(scene <- scenes){
                     <tr>
                         <td>@scene.name</td>
-                        <td>
+                        <td class="table-buttons">
                             <button class="btn btn-group-sm btn-default">Edit...</button>
                             <button class="btn btn-group-sm btn-default">Delete...</button>
                         </td>
@@ -40,7 +40,7 @@
                             <div class="col-md-12">
                                     <div class="form-group">
                                         <label for="sceneName">Scene name</label>
-                                        <input type="text" class="form-control" id="sceneName" name="sceneName" />
+                                        <input type="text" class="form-control" id="sceneName" name="sceneName" value="@sceneForm("name").value.getOrElse("")" />
                                     </div>
                             </div>
                         </div>
