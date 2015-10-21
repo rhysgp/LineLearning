@@ -29,7 +29,7 @@ class UserController @Inject()(val messagesApi: MessagesApi) extends Controller 
 
         val user = DbService.addOrFindUser(registerData.email)
 
-        Redirect(routes.PromptController.index())
+        Redirect(routes.ScenesController.list())
           .withCookies(Cookie(CookieHelper.COOKIE_NAME, user.toString))
       }
     )

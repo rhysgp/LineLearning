@@ -3,7 +3,7 @@
 # ~~~~
 
 # Home page
-GET     /                          controllers.PromptController.index
+GET     /                          controllers.ScenesController.list
 GET     /list                      controllers.PromptController.list
 GET     /edit                      controllers.PromptController.edit
 POST    /edit                      controllers.PromptController.add
@@ -13,6 +13,7 @@ GET     /register                  @controllers.UserController.index
 POST    /register                  @controllers.UserController.register
 
 GET     /scenes                    controllers.ScenesController.list
+POST    /addScene                  controllers.ScenesController.addScene
 
 
 # Map static resources from the /public folder to the /assets URL path

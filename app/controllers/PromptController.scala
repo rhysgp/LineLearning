@@ -45,7 +45,7 @@ class PromptController extends Controller {
               val cueLine = lines(index)
               Ok(views.html.prompt(index, cueLine.cue, cueLine.line))
             } else {
-              Redirect(routes.PromptController.index())
+              Redirect(routes.PromptController.line(0))
             }
 
           case Failure(t) =>
