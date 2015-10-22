@@ -9,7 +9,7 @@ import scala.util.Try
 trait DbService {
 
   def loadScenes(user: User): Try[Seq[SceneName]]
-  def addScene(user: User, sceneName: String): Try[SceneName]
+  def addScene(user: User, sceneName: String): Try[Seq[SceneName]]
   def removeScene(scene: SceneName): Try[SceneName]
   def renameScene(scene: SceneName, newName: String): Try[SceneName]
 
@@ -31,14 +31,20 @@ object InMemoryDbService extends DbService {
   var lines = Seq[(SceneName, CueLine)]()
   var users = Seq[User]()
 
-  def loadScenes(user: User): Try[Seq[SceneName]] = Try{
-    scenes.filter(_.user == user)
-  }
+  def loadScenes(user: User): Try[Seq[SceneName]] = Try { loadScenesImpl(user) }
 
-  def addScene(user: User, sceneName: String): Try[SceneName] = Try {
-    val sn = SceneName(user, sceneName)
-    scenes = scenes :+ sn
-    sn
+  def loadScenesImpl(user: User): Seq[SceneName] = scenes.filter(_.user == user)
+
+
+  def addScene(user: User, sceneName: String): Try[Seq[SceneName]] = Try {
+
+    if (scenes.contains(SceneName(user, sceneName))) {
+      throw new AlreadyExistsException(s"Scene '$sceneName' already exists.")
+    }
+
+    scenes = scenes :+ SceneName(user, sceneName)
+
+    loadScenesImpl(user)
   }
 
   def removeScene(scene: SceneName): Try[SceneName] = Try {
@@ -113,7 +119,7 @@ object DbService extends DbService {
   override def setCueLines(scene: SceneName, newLines: Lines): Try[Seq[CueLine]] = InMemoryDbService.setCueLines(scene, newLines)
   override def saveCueLine(cl: CueLine): Try[Seq[CueLine]] = InMemoryDbService.saveCueLine(cl)
   override def loadCueLines(scene: SceneName): Try[Seq[CueLine]] = InMemoryDbService.loadCueLines(scene)
-  override def addScene(user: User, sceneName: String): Try[SceneName] = InMemoryDbService.addScene(user, sceneName)
+  override def addScene(user: User, sceneName: String): Try[Seq[SceneName]] = InMemoryDbService.addScene(user, sceneName)
   override def renameScene(scene: SceneName, newName: String): Try[SceneName] = InMemoryDbService.renameScene(scene, newName)
   override def addOrFindUser(email: String): Try[User] = InMemoryDbService.addOrFindUser(email)
 }
@@ -129,3 +135,5 @@ object User {
     User(parts(0), parts(1))
   }
 }
+
+class AlreadyExistsException(msg: String) extends Exception(msg)

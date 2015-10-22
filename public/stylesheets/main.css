@@ -4,3 +4,8 @@
 .answer { color: grey }
 
 .table-buttons { width: 200px }
+
+.flash { color: gray; margin: 5px 20px 5px 20px; border: 1px solid #eeeeee; padding: 5px; border-radius: 3px }
+
+.error { border-color: red }
+

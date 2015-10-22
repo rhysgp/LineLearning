@@ -3,7 +3,7 @@ package controllers
 import play.api.data._
 import play.api.data.Forms._
 import play.api.mvc.{Action, _}
-import services.{User, DbService}
+import services.{AlreadyExistsException, User, DbService}
 import support.CookieHelper._
 
 import scala.util.{Failure, Success}
@@ -46,8 +46,15 @@ class ScenesController extends Controller {
             BadRequest(views.html.scenes(loadScenes(user), formWithErrors))
           },
           sceneData => {
-            DbService.addScene(user, sceneData.sceneName)
-            Redirect(routes.ScenesController.list())
+            DbService.addScene(user, sceneData.sceneName) match {
+              case Success(_) =>
+                Redirect(routes.ScenesController.list())
+              case Failure(t) if t.isInstanceOf[AlreadyExistsException] =>
+                Redirect(routes.ScenesController.list()).flashing("error" -> t.getMessage)
+              case Failure(t) =>
+                InternalServerError(views.html.error(t))
+            }
+
 //            Ok(views.html.scenes(loadScenes(user), sceneForm))
           }
         )

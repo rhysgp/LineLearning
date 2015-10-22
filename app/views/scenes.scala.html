@@ -1,6 +1,8 @@
-@(scenes: Seq[model.SceneName], sceneForm: Form[SceneFormData])
+@(scenes: Seq[model.SceneName], sceneForm: Form[SceneFormData])(implicit flash: Flash)
 @main("Scenes") {
     <div class="container">
+
+
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
@@ -11,7 +13,7 @@
                 </thead>
                 <tbody>
                 @for(scene <- scenes){
-                    <tr>
+                    <tr data-scene-id="@scene.">
                         <td>@scene.name</td>
                         <td class="table-buttons">
                             <button class="btn btn-group-sm btn-default">Edit...</button>
@@ -24,12 +26,17 @@
         </div>
         <div>
             <button class="btn btn-primary" data-toggle="modal" data-target=".edit-scene-modal">Add...</button>
+            @defining(flash.get("error")) { errorOpt =>
+                @if(errorOpt.isDefined) {
+                    <span class="flash error">@flash("error")</span>
+                }
+            }
         </div>
     </div>
 
     <div id="sceneEdit" class="modal fade edit-scene-modal">
         <div class="modal-dialog">
-            <form method="post" action="@routes.ScenesController.addScene">
+            <form method="post" action="@routes.ScenesController.addScene" data-toggle="validator">
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -40,7 +47,7 @@
                             <div class="col-md-12">
                                     <div class="form-group">
                                         <label for="sceneName">Scene name</label>
-                                        <input type="text" class="form-control" id="sceneName" name="sceneName" value="@sceneForm("name").value.getOrElse("")" />
+                                        <input type="text" class="form-control" id="sceneName" name="sceneName" value="@sceneForm("name").value.getOrElse("")" required="true" />
                                     </div>
                             </div>
                         </div>
