@@ -58,12 +58,13 @@ class PromptController extends Controller {
     }
   }
 
-  def list = Action { implicit request =>
+  def list(sceneStream: String) = Action { implicit request =>
     request.cookies.get(COOKIE_NAME) match {
 
       case Some(cookie) =>
 
-        DbService.loadCueLines(SceneName(User("dummy", "dummy"), "dummy")) match {
+        val scene = SceneName.fromString(sceneStream)
+        DbService.loadCueLines(scene) match {
           case Success(lines) =>
             Ok(views.html.list(lines))
 

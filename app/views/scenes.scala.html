@@ -13,11 +13,11 @@
                 </thead>
                 <tbody>
                 @for(scene <- scenes){
-                    <tr data-scene-id="@scene.">
+                    <tr>
                         <td>@scene.name</td>
                         <td class="table-buttons">
-                            <button class="btn btn-group-sm btn-default">Edit...</button>
-                            <button class="btn btn-group-sm btn-default">Delete...</button>
+                            <a href="@routes.PromptController.list(scene.toString)" class="btn btn-primary btn-sm" role="button">Edit...</a>
+                            <a href="@routes.ScenesController.delete(scene.toString)" class="btn btn-primary btn-sm" role="button">Delete...</a>
                         </td>
                     </tr>
                 }
@@ -66,6 +66,8 @@
         $('#sceneEdit').on('shown.bs.modal', function () {
               $('#sceneName').focus()
         });
+
+
 //        $("#addScene").click(function() {
 //
 //            window.target.href = "";

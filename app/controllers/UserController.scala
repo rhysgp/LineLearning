@@ -8,6 +8,8 @@ import play.api.mvc._
 import services.DbService
 import support.CookieHelper
 
+import scala.util.{Failure, Success}
+
 class UserController @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
 
   def index() = Action { implicit request =>
@@ -27,10 +29,15 @@ class UserController @Inject()(val messagesApi: MessagesApi) extends Controller 
         //     i) Find the existing user's GUID and send them an email; OR
         //    ii) Create a new user, generating the GUID, and send them an email
 
-        val user = DbService.addOrFindUser(registerData.email)
+        DbService.addOrFindUser(registerData.email) match {
+          case Success(user) =>
+            Redirect(routes.ScenesController.list())
+              .withCookies(Cookie(CookieHelper.COOKIE_NAME, user.toString))
 
-        Redirect(routes.ScenesController.list())
-          .withCookies(Cookie(CookieHelper.COOKIE_NAME, user.toString))
+          case Failure(t) =>
+            Ok(views.html.error(t))
+        }
+
       }
     )
   }

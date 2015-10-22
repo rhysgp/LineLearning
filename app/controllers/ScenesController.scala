@@ -1,5 +1,6 @@
 package controllers
 
+import model.SceneName
 import play.api.data._
 import play.api.data.Forms._
 import play.api.mvc.{Action, _}
@@ -34,7 +35,7 @@ class ScenesController extends Controller {
     }
   }
 
-  def addScene = Action { implicit request =>
+  def addScene() = Action { implicit request =>
 
     request.cookies.get(COOKIE_NAME) match {
 
@@ -58,6 +59,29 @@ class ScenesController extends Controller {
 //            Ok(views.html.scenes(loadScenes(user), sceneForm))
           }
         )
+
+      case None =>
+        Redirect(routes.UserController.register())
+    }
+  }
+
+  def delete(sceneStream: String) = Action { implicit request =>
+    request.cookies.get(COOKIE_NAME) match {
+
+      case Some(cookie) =>
+
+        val user = User.fromString(cookie.value)
+        val scene = SceneName.fromString(sceneStream)
+
+        DbService.removeScene(scene) match {
+
+          case Success(scenes) =>
+            Redirect(routes.ScenesController.list)
+
+          case Failure(t) =>
+            BadRequest(views.html.error(t))
+
+        }
 
       case None =>
         Redirect(routes.UserController.register())
