@@ -1,0 +1,71 @@
+@(scene: model.SceneName, list: Seq[model.CueLine], cueLineForm: Form[AddCueLine])
+
+
+@main("List") {
+    <div class="container">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Cue</th>
+                        <th>Line</th>
+                        <th style="width: 160px">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for(pr <- list){
+                    <tr>
+                        <td>@{pr.cue}</td>
+                        <td>@{pr.line}</td>
+                        <td>
+                            <button class="btn btn-group-sm btn-default">Edit...</button>
+                            <button class="btn btn-group-sm btn-default">Delete...</button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <button class="btn btn-primary" data-target="#cueLineEdit" data-toggle="modal">Add...</button>
+        </div>
+    </div>
+
+    <div id="cueLineEdit" class="modal fade" >
+        <div class="modal-dialog">
+            <form method="post" action="@routes.PromptController.add" data-toggle="validator">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Edit Cue Line</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    @*<label for="sceneName">Scene name</label>*@
+                                    @*<input type="text" class="form-control" id="sceneName" name="sceneName" value="@cueLineForm("name").value.getOrElse("")" required="true" />*@
+                                    <input type="hidden" name="sceneStream" value="@scene" />
+                                    <label for="prompt" class="sr-only">Cue</label>
+                                    <textarea id="cue" name="cue" class="form-control" placeholder="Cue..."></textarea>
+                                    <label for="line" class="sr-only">Line</label>
+                                    <textarea id="line" name="line" class="form-control" placeholder="Line..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary" id="addCueLine">Save changes</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $("#cueLineEdit").on("shown.bs.modal", function() {
+            $("#cue").focus();
+        });
+    </script>
+}

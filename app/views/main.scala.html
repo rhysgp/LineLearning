@@ -1,4 +1,4 @@
-@(title: String)(content: Html)
+@(title: String, user: Option[services.User])(content: Html)
 
 <!DOCTYPE html>
 
@@ -14,6 +14,9 @@
         <script src="@routes.Assets.versioned("javascripts/hello.js")" type="text/javascript"></script>
     </head>
     <body>
+        <header>
+            <span>@user.map(u => u.email).getOrElse("")</span>
+        </header>
         @content
     </body>
 </html>

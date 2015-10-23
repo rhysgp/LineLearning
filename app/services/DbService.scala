@@ -33,7 +33,14 @@ object InMemoryDbService extends DbService {
 
   def loadScenes(user: User): Try[Seq[SceneName]] = Try { loadScenesImpl(user) }
 
-  def loadScenesImpl(user: User): Seq[SceneName] = scenes.filter(_.user == user)
+  def loadScenesImpl(user: User): Seq[SceneName] = {
+
+    if (!users.contains(user)) {
+      throw new NoSuchUserException(user.email)
+    }
+
+    scenes.filter(_.user == user)
+  }
 
 
   def addScene(user: User, sceneName: String): Try[Seq[SceneName]] = Try {
@@ -66,12 +73,25 @@ object InMemoryDbService extends DbService {
   }
 
   def loadCueLines(scene: SceneName): Try[Seq[CueLine]] = Try{
+
+    if (!users.contains(scene.user)) {
+      throw new NoSuchUserException(scene.user.email)
+    }
+
+    if (!scenes.contains(scene)) {
+      throw new NoSuchSceneException(scene.name)
+    }
+
     lines
       .filter{case (s, _) => s == scene}
       .map{case (_, cl) => cl}
   }
 
   def addCueLine(scene: SceneName, cueLine: CueLine): Try[Seq[CueLine]] = Try{
+    if (!scenes.contains(scene)) {
+      throw new NoSuchSceneException(scene.name)
+    }
+
     if (!lines.exists{case (_, cl) => cl.cueLineId == cueLine.cueLineId}) {
       lines = lines :+ (scene -> cueLine)
     }
@@ -137,3 +157,5 @@ object User {
 }
 
 class AlreadyExistsException(msg: String) extends Exception(msg)
+class NoSuchSceneException(sceneName: String) extends Exception(s"Scene $sceneName doesn't exist.")
+class NoSuchUserException(email: String) extends Exception(s"$email is not registered.")

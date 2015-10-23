@@ -4,7 +4,8 @@ import model.SceneName
 import play.api.data._
 import play.api.data.Forms._
 import play.api.mvc.{Action, _}
-import services.{AlreadyExistsException, User, DbService}
+import services.{NoSuchUserException, AlreadyExistsException, User, DbService}
+import support.CookieHelper
 import support.CookieHelper._
 
 import scala.util.{Failure, Success}
@@ -24,6 +25,10 @@ class ScenesController extends Controller {
 
           case Success(scenes) =>
             Ok(views.html.scenes(scenes, sceneForm))
+
+          case Failure(t) if t.isInstanceOf[NoSuchUserException] =>
+            BadRequest(views.html.error(t))
+              .discardingCookies(DiscardingCookie(CookieHelper.COOKIE_NAME))
 
           case Failure(t) =>
             BadRequest(views.html.error(t))
