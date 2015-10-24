@@ -1,5 +1,6 @@
-@(scenes: Seq[model.SceneName], sceneForm: Form[SceneFormData])(implicit flash: Flash)
-@main("Scenes") {
+@import model.User
+@(userOpt: Option[User], scenes: Seq[model.SceneName], sceneForm: Form[SceneFormData])(implicit flash: Flash)
+@main("Scenes", userOpt) {
     <div class="container">
 
 

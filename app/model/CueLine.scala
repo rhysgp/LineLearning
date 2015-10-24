@@ -2,8 +2,6 @@ package model
 
 import java.util.UUID
 
-import services.User
-
 case class SceneName(user: User, name: String) {
   override def toString = {
     s"${user.toString}§$name"

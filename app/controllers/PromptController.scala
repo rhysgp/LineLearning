@@ -1,10 +1,10 @@
 package controllers
 
-import model.{CueLine, CueLineId, SceneName}
+import model.{CueLine, CueLineId, SceneName, User}
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc.{Action, _}
-import services.{DbService, User}
+import services.{DbService}
 import support.CookieHelper._
 
 import scala.util.{Failure, Success}
@@ -21,7 +21,7 @@ class PromptController extends Controller {
           case Success(lines) =>
             if (index >= 0 && index < lines.length) {
               val cueLine = lines(index)
-              Ok(views.html.prompt(index, cueLine.cue, cueLine.line))
+              Ok(views.html.prompt(Option(user), index, cueLine.cue, cueLine.line))
             } else {
               Redirect(routes.PromptController.line(0))
             }
@@ -40,11 +40,11 @@ class PromptController extends Controller {
     request.cookies.get(COOKIE_NAME) match {
 
       case Some(cookie) =>
-
+        val user = User.fromString(cookie.value)
         val scene = SceneName.fromString(sceneStream)
         DbService.loadCueLines(scene) match {
           case Success(lines) =>
-            Ok(views.html.cueLines(scene, lines, addForm))
+            Ok(views.html.cueLines(Option(user), scene, lines, addForm))
 
           case Failure(t) =>
             Ok("Failed to load cue lines...")
@@ -65,7 +65,7 @@ class PromptController extends Controller {
 
         DbService.loadCueLines(SceneName(User("dummy", "dummy"), "dummy")) match {
           case Success(lines) =>
-            Ok(views.html.add(addForm, lines))
+            Ok(views.html.add(Option(user), addForm, lines))
 
           case Failure(t) =>
             Ok("Failed to load cue lines...")
@@ -82,11 +82,13 @@ class PromptController extends Controller {
 
       case Some(cookie) =>
 
+        val user = User.fromString(cookie.value)
+
         addForm.bindFromRequest()(request).fold(
           formWithErrors => {
-            DbService.loadCueLines(SceneName(User("dummy", "dummy"), "dummy")) match {
+            DbService.loadCueLines(SceneName(user, "dummy")) match {
               case Success(lines) =>
-                BadRequest(views.html.add(formWithErrors, lines))
+                BadRequest(views.html.add(Option(user), formWithErrors, lines))
 
               case Failure(t) =>
                 Ok("Failed to load cue lines...")

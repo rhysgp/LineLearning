@@ -1,4 +1,5 @@
-@(title: String, user: Option[services.User])(content: Html)
+@import model.User
+@(title: String, user: Option[User])(content: Html)
 
 <!DOCTYPE html>
 
@@ -15,7 +16,22 @@
     </head>
     <body>
         <header>
-            <span>@user.map(u => u.email).getOrElse("")</span>
+            <nav class="navbar navbar-default">
+                <div class="container-fluid">
+                    <div id="navbar" class="navbar-collapse collapse">
+                        <ul class="navbar-nav">
+                            <li class="active">
+                                <a href="#">Home</a>
+                            </li>
+                            <li class="active">
+                                <a href="#">Scenes</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <span style="float:right">@user.map(u => u.email).getOrElse("")</span>
+            <div>Scenes</div>
         </header>
         @content
     </body>

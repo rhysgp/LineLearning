@@ -1,5 +1,6 @@
-@(index: Int, cue: String, line: String)
-@main("Cues") {
+@import model.User
+@(userOpt: Option[User], index: Int, cue: String, line: String)
+@main("Cues", userOpt) {
 
   <div class="container">
     <div id="inputPrompt" data-line="@line" data-index="@index">

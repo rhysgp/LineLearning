@@ -1,6 +1,6 @@
-@import model.CueLine
-@(lines: Seq[CueLine])
-@main("Lines") {
+@import model.{CueLine, User}
+@(userOpt: Option[User], lines: Seq[CueLine])
+@main("Lines", userOpt) {
     <div class="container">
         <!-- Show the current settings -->
 

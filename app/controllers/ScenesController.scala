@@ -4,7 +4,8 @@ import model.SceneName
 import play.api.data._
 import play.api.data.Forms._
 import play.api.mvc.{Action, _}
-import services.{NoSuchUserException, AlreadyExistsException, User, DbService}
+import model.User
+import services.{NoSuchUserException, AlreadyExistsException, DbService}
 import support.CookieHelper
 import support.CookieHelper._
 
@@ -24,7 +25,7 @@ class ScenesController extends Controller {
         DbService.loadScenes(user) match {
 
           case Success(scenes) =>
-            Ok(views.html.scenes(scenes, sceneForm))
+            Ok(views.html.scenes(Option(user), scenes, sceneForm))
 
           case Failure(t) if t.isInstanceOf[NoSuchUserException] =>
             BadRequest(views.html.error(t))
@@ -49,7 +50,7 @@ class ScenesController extends Controller {
 
         sceneForm.bindFromRequest.fold(
           formWithErrors => {
-            BadRequest(views.html.scenes(loadScenes(user), formWithErrors))
+            BadRequest(views.html.scenes(Option(user), loadScenes(user), formWithErrors))
           },
           sceneData => {
             DbService.addScene(user, sceneData.sceneName) match {

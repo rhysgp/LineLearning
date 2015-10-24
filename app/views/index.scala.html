@@ -1,4 +1,6 @@
-@main("RhysSoft - Line Learning") {
+@import model.User
+@(userOpt: Option[User])
+@main("RhysSoft - Line Learning", userOpt) {
     <div class="container">
         RhysSoft Line Learning
     </div>

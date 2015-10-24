@@ -1,7 +1,7 @@
-@(scene: model.SceneName, list: Seq[model.CueLine], cueLineForm: Form[AddCueLine])
+@(user: Option[model.User], scene: model.SceneName, list: Seq[model.CueLine], cueLineForm: Form[AddCueLine])
 
 
-@main("List") {
+@main("List", user) {
     <div class="container">
         <div class="table-responsive">
             <table class="table table-striped">
