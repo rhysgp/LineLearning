@@ -1,5 +1,6 @@
-@(t: Throwable)
-@main("Scenes", None) {
+@import model.Navigation
+@(navigation: Navigation, t: Throwable)
+@main("Scenes", navigation) {
     <pre>
         @t.toString
     </pre>

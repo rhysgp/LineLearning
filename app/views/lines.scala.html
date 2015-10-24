@@ -1,6 +1,6 @@
-@import model.{CueLine, User}
-@(userOpt: Option[User], lines: Seq[CueLine])
-@main("Lines", userOpt) {
+@import model.{CueLine, Navigation}
+@(navigation: Navigation, lines: Seq[CueLine])
+@main("Lines", navigation) {
     <div class="container">
         <!-- Show the current settings -->
 

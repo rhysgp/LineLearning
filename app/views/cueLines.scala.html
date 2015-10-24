@@ -1,7 +1,6 @@
-@(user: Option[model.User], scene: model.SceneName, list: Seq[model.CueLine], cueLineForm: Form[AddCueLine])
-
-
-@main("List", user) {
+@import model.{CueLine, Navigation, SceneName}
+@(navigation: Navigation, scene: SceneName, list: Seq[CueLine], cueLineForm: Form[AddCueLine])
+@main("List", navigation) {
     <div class="container">
         <div class="table-responsive">
             <table class="table table-striped">

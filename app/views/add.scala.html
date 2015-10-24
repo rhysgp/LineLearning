@@ -1,8 +1,6 @@
-@import model.CueLine
-@import model.User
-@(userOpt: Option[User], form: Form[AddCueLine], lines: Seq[CueLine])
-@main("Add cue / line", userOpt) {
-
+@import model.{CueLine, Navigation}
+@(navigation: Navigation, form: Form[AddCueLine], lines: Seq[CueLine])
+@main("Add cue / line", navigation) {
     <div class="container">
         <div id="inputPrompt">
 

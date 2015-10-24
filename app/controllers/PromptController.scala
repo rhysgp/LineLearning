@@ -3,9 +3,10 @@ package controllers
 import model.{CueLine, CueLineId, SceneName, User}
 import play.api.data.Forms._
 import play.api.data._
-import play.api.mvc.{Action, _}
-import services.{DbService}
+import play.api.mvc._
+import services.DbService
 import support.CookieHelper._
+import views.NavigationHelper._
 
 import scala.util.{Failure, Success}
 
@@ -21,7 +22,7 @@ class PromptController extends Controller {
           case Success(lines) =>
             if (index >= 0 && index < lines.length) {
               val cueLine = lines(index)
-              Ok(views.html.prompt(Option(user), index, cueLine.cue, cueLine.line))
+              Ok(views.html.prompt(buildNavigation(Option(user)), index, cueLine.cue, cueLine.line))
             } else {
               Redirect(routes.PromptController.line(0))
             }
@@ -44,7 +45,8 @@ class PromptController extends Controller {
         val scene = SceneName.fromString(sceneStream)
         DbService.loadCueLines(scene) match {
           case Success(lines) =>
-            Ok(views.html.cueLines(Option(user), scene, lines, addForm))
+            val navigation = buildNavigation(Option(user), sceneName = Option(scene))
+            Ok(views.html.cueLines(navigation, scene, lines, addForm))
 
           case Failure(t) =>
             Ok("Failed to load cue lines...")
@@ -65,7 +67,7 @@ class PromptController extends Controller {
 
         DbService.loadCueLines(SceneName(User("dummy", "dummy"), "dummy")) match {
           case Success(lines) =>
-            Ok(views.html.add(Option(user), addForm, lines))
+            Ok(views.html.add(buildNavigation(Option(user)), addForm, lines))
 
           case Failure(t) =>
             Ok("Failed to load cue lines...")
@@ -88,7 +90,7 @@ class PromptController extends Controller {
           formWithErrors => {
             DbService.loadCueLines(SceneName(user, "dummy")) match {
               case Success(lines) =>
-                BadRequest(views.html.add(Option(user), formWithErrors, lines))
+                BadRequest(views.html.add(buildNavigation(Option(user)), formWithErrors, lines))
 
               case Failure(t) =>
                 Ok("Failed to load cue lines...")

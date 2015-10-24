@@ -9,17 +9,18 @@ import services.DbService
 import support.CookieHelper
 
 import scala.util.{Failure, Success}
+import views.NavigationHelper._
 
 class UserController @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
 
   def index() = Action { implicit request =>
-    Ok(views.html.register(registerForm))
+    Ok(views.html.register(noNavigation, registerForm))
   }
 
   def register() = Action { implicit request =>
     registerForm.bindFromRequest.fold(
       formWithErrors =>
-        BadRequest(views.html.register(formWithErrors)),
+        BadRequest(views.html.register(noNavigation, formWithErrors)),
       registerData   => {
 
         // actually do the register:
@@ -35,7 +36,7 @@ class UserController @Inject()(val messagesApi: MessagesApi) extends Controller 
               .withCookies(Cookie(CookieHelper.COOKIE_NAME, user.toString))
 
           case Failure(t) =>
-            Ok(views.html.error(t))
+            Ok(views.html.error(noNavigation, t))
         }
 
       }

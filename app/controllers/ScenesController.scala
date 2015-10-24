@@ -8,6 +8,7 @@ import model.User
 import services.{NoSuchUserException, AlreadyExistsException, DbService}
 import support.CookieHelper
 import support.CookieHelper._
+import views.NavigationHelper._
 
 import scala.util.{Failure, Success}
 
@@ -25,14 +26,14 @@ class ScenesController extends Controller {
         DbService.loadScenes(user) match {
 
           case Success(scenes) =>
-            Ok(views.html.scenes(Option(user), scenes, sceneForm))
+            Ok(views.html.scenes(buildNavigation(Option(user)), scenes, sceneForm))
 
           case Failure(t) if t.isInstanceOf[NoSuchUserException] =>
-            BadRequest(views.html.error(t))
+            BadRequest(views.html.error(buildNavigation(Option(user)), t))
               .discardingCookies(DiscardingCookie(CookieHelper.COOKIE_NAME))
 
           case Failure(t) =>
-            BadRequest(views.html.error(t))
+            BadRequest(views.html.error(buildNavigation(Option(user)), t))
 
         }
 
@@ -50,7 +51,7 @@ class ScenesController extends Controller {
 
         sceneForm.bindFromRequest.fold(
           formWithErrors => {
-            BadRequest(views.html.scenes(Option(user), loadScenes(user), formWithErrors))
+            BadRequest(views.html.scenes(buildNavigation(Option(user)), loadScenes(user), formWithErrors))
           },
           sceneData => {
             DbService.addScene(user, sceneData.sceneName) match {
@@ -59,10 +60,8 @@ class ScenesController extends Controller {
               case Failure(t) if t.isInstanceOf[AlreadyExistsException] =>
                 Redirect(routes.ScenesController.list()).flashing("error" -> t.getMessage)
               case Failure(t) =>
-                InternalServerError(views.html.error(t))
+                InternalServerError(views.html.error(buildNavigation(Option(user)), t))
             }
-
-//            Ok(views.html.scenes(loadScenes(user), sceneForm))
           }
         )
 
@@ -79,13 +78,15 @@ class ScenesController extends Controller {
         val user = User.fromString(cookie.value)
         val scene = SceneName.fromString(sceneStream)
 
+
+
         DbService.removeScene(scene) match {
 
           case Success(scenes) =>
             Redirect(routes.ScenesController.list)
 
           case Failure(t) =>
-            BadRequest(views.html.error(t))
+            BadRequest(views.html.error(buildNavigation(Option(user)), t))
 
         }
 

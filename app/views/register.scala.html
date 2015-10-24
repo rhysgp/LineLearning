@@ -1,5 +1,6 @@
-@(form: Form[Register])(implicit messages: Messages)
-@main("Register", None) {
+@import model.Navigation
+@(navigation: Navigation, form: Form[Register])(implicit messages: Messages)
+@main("Register", navigation) {
     <div class="container">
         <div id="inputPrompt">
             <form id="registerForm" method="post" action="@routes.UserController.register()" class="form-horizontal">

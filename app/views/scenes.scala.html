@@ -1,24 +1,21 @@
-@import model.User
-@(userOpt: Option[User], scenes: Seq[model.SceneName], sceneForm: Form[SceneFormData])(implicit flash: Flash)
-@main("Scenes", userOpt) {
+@import model.Navigation
+@(navigation: Navigation, scenes: Seq[model.SceneName], sceneForm: Form[SceneFormData])(implicit flash: Flash)
+@main("Scenes", navigation) {
     <div class="container">
-
-
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
                     <tr>
                         <th>Scene</th>
-                        <th>Action</th>
+                        <th style="width: 100px">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                 @for(scene <- scenes){
                     <tr>
-                        <td>@scene.name</td>
-                        <td class="table-buttons">
-                            <a href="@routes.PromptController.list(scene.toString)" class="btn btn-primary btn-sm" role="button">Edit...</a>
-                            <a href="@routes.ScenesController.delete(scene.toString)" class="btn btn-primary btn-sm" role="button">Delete...</a>
+                        <td><a href="@routes.PromptController.list(scene.toString)">@scene.name</a></td>
+                        <td>
+                            <a href="@routes.ScenesController.delete(scene.toString)" class="btn btn-default btn-sm" role="button">Delete...</a>
                         </td>
                     </tr>
                 }
@@ -34,7 +31,6 @@
             }
         </div>
     </div>
-
     <div id="sceneEdit" class="modal fade edit-scene-modal">
         <div class="modal-dialog">
             <form method="post" action="@routes.ScenesController.addScene" data-toggle="validator">
@@ -63,17 +59,8 @@
     </div>
 
     <script type="text/javascript">
-
         $("#sceneEdit").on("shown.bs.modal", function () {
               $('#sceneName').focus();
         });
-
-
-//        $("#addScene").click(function() {
-//
-//            window.target.href = "";
-//
-//            alert("here");
-//        });
     </script>
 }
