@@ -57,15 +57,16 @@ class PromptController extends Controller {
     }
   }
 
-  def edit = Action { request =>
+  def edit(sceneStream: String, index: Int) = Action { request =>
 
     request.cookies.get(COOKIE_NAME) match {
 
       case Some(cookie) =>
 
         val user = User.fromString(cookie.value)
+        val scene = SceneName.fromString(sceneStream)
 
-        DbService.loadCueLines(SceneName(User("dummy", "dummy"), "dummy")) match {
+        DbService.loadCueLines(scene) match {
           case Success(lines) =>
             Ok(views.html.add(buildNavigation(Option(user)), addForm, lines))
 
@@ -98,13 +99,26 @@ class PromptController extends Controller {
           },
           formData => {
             val scene = SceneName.fromString(formData.sceneStream)
-            DbService.addCueLine(scene, CueLine(CueLineId.create(), formData.cue, formData.line))
-            DbService.loadCueLines(scene) match {
-              case Success(lines) =>
-                Redirect(routes.PromptController.list(scene.toString))
 
-              case Failure(t) =>
-                Ok("Failed to load cue lines...")
+            if (formData.cueLineId.length > 0) {
+              val modifiedCl = CueLine(CueLineId(formData.cueLineId), formData.cue, formData.line)
+              DbService.saveCueLine(modifiedCl) match {
+                case Success(cueLines) =>
+                  Redirect(routes.PromptController.list(scene.toString))
+                    .flashing("failed" -> "Error!")
+                case Failure(t) =>
+                  Redirect(routes.PromptController.list(scene.toString))
+                    .flashing("failed" -> t.getMessage)
+              }
+            } else {
+              DbService.addCueLine(scene, CueLine(CueLineId.create(), formData.cue, formData.line))
+              DbService.loadCueLines(scene) match {
+                case Success(lines) =>
+                  Redirect(routes.PromptController.list(scene.toString))
+
+                case Failure(t) =>
+                  Ok("Failed to load cue lines...")
+              }
             }
           }
         )
@@ -115,9 +129,22 @@ class PromptController extends Controller {
 
   }
 
+  def delete(sceneStream: String, cueLineId: String) = Action { request =>
+    val scene = SceneName.fromString(sceneStream)
+
+    DbService.removeCueLine(scene, CueLineId(cueLineId)) match {
+      case Success(_) =>
+        Redirect(routes.PromptController.list(sceneStream))
+      case Failure(t) =>
+        Redirect(routes.PromptController.list(sceneStream))
+          .flashing("failed" -> t.getMessage)
+    }
+  }
+
   val addForm = Form(
     mapping(
       "sceneStream" -> nonEmptyText,
+      "cueLineId" -> text,
       "cue" -> nonEmptyText,
       "line" -> nonEmptyText
     )(AddCueLine.apply)(AddCueLine.unapply)
@@ -125,4 +152,4 @@ class PromptController extends Controller {
 
 }
 
-case class AddCueLine(sceneStream: String, cue: String, line: String)
+case class AddCueLine(sceneStream: String, cueLineId: String, cue: String, line: String)

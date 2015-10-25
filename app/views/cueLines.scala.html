@@ -1,5 +1,5 @@
 @import model.{CueLine, Navigation, SceneName}
-@(navigation: Navigation, scene: SceneName, list: Seq[CueLine], cueLineForm: Form[AddCueLine])
+@(navigation: Navigation, scene: SceneName, cueLines: Seq[CueLine], cueLineForm: Form[AddCueLine])
 @main("List", navigation) {
     <div class="container">
         <div class="table-responsive">
@@ -12,13 +12,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                @for(pr <- list){
+                @for(cueLine <- cueLines){
                     <tr>
-                        <td>@{pr.cue}</td>
-                        <td>@{pr.line}</td>
+                        <td>@cueLine.cue</td>
+                        <td>@cueLine.line</td>
                         <td>
-                            <button class="btn btn-group-sm btn-default">Edit...</button>
-                            <button class="btn btn-group-sm btn-default">Delete...</button>
+                            <button class="btn btn-sm btn-default" data-cuelineid="@cueLine.cueLineId.id" data-cue="@cueLine.cue" data-line="@cueLine.line">Edit...</button>
+                            <button class="btn btn-sm btn-default deleteCueLine" data-cuelineid="@cueLine.cueLineId.id">Delete...</button>
                         </td>
                     </tr>
                 }
@@ -26,7 +26,7 @@
             </table>
         </div>
         <div>
-            <button class="btn btn-primary" data-target="#cueLineEdit" data-toggle="modal">Add...</button>
+            <button class="btn btn-primary" id="addCueLineButton">Add...</button>
         </div>
     </div>
 
@@ -42,8 +42,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    @*<label for="sceneName">Scene name</label>*@
-                                    @*<input type="text" class="form-control" id="sceneName" name="sceneName" value="@cueLineForm("name").value.getOrElse("")" required="true" />*@
+                                    <input type="hidden" name="cueLineId" id="cueLineId" />
                                     <input type="hidden" name="sceneStream" value="@scene" />
                                     <label for="prompt" class="sr-only">Cue</label>
                                     <textarea id="cue" name="cue" class="form-control" placeholder="Cue..."></textarea>
@@ -63,8 +62,38 @@
     </div>
 
     <script type="text/javascript">
+
+        function setFormValues(cueLineId, cue, line) {
+            $("#cueLineId").val(cueLineId);
+            $("#cue").val(cue);
+            $("#line").val(line);
+        }
+
         $("#cueLineEdit").on("shown.bs.modal", function() {
             $("#cue").focus();
+        });
+
+        $("#addCueLineButton").click(function() {
+            setFormValues("", "", "");
+            $("#cueLineEdit").modal("show");
+        });
+
+        $("button[data-cue]").click(function(e) {
+            setFormValues(
+                $(e.target).data("cuelineid"),
+                $(e.target).data("cue"),
+                $(e.target).data("line")
+            );
+            $("#cueLineEdit").modal("show");
+        });
+
+        $(".deleteCueLine").click(function(e) {
+            var cueLineId = $(e.target).data("cuelineid");
+            var urlTemplate = "@routes.PromptController.delete(scene.toString, "$$cueLineId$$")";
+
+            window.location.href = urlTemplate.replace("$$cueLineId$$", cueLineId);
+
+            alert(cueLineId);
         });
     </script>
 }

@@ -2,7 +2,7 @@ package services
 
 import java.util.UUID
 
-import model.{CueLine, Lines, SceneName, User}
+import model._
 
 import scala.util.Try
 
@@ -15,7 +15,7 @@ trait DbService {
 
   def loadCueLines(scene: SceneName): Try[Seq[CueLine]]
   def addCueLine(scene: SceneName, cl: CueLine): Try[Seq[CueLine]]
-  def removeCueLine(scene: SceneName, cl: CueLine): Try[Seq[CueLine]]
+  def removeCueLine(scene: SceneName, cueLineId: CueLineId): Try[Seq[CueLine]]
   def saveCueLine(cl: CueLine): Try[Seq[CueLine]]
 
   def setCueLines(scene: SceneName, newLines: Lines): Try[Seq[CueLine]]
@@ -72,8 +72,7 @@ object InMemoryDbService extends DbService {
     }
   }
 
-  def loadCueLines(scene: SceneName): Try[Seq[CueLine]] = Try{
-
+  def loadCueLinesImpl(scene: SceneName): Seq[CueLine] = {
     if (!users.contains(scene.user)) {
       throw new NoSuchUserException(scene.user.email)
     }
@@ -87,6 +86,10 @@ object InMemoryDbService extends DbService {
       .map{case (_, cl) => cl}
   }
 
+  def loadCueLines(scene: SceneName): Try[Seq[CueLine]] = Try{
+    loadCueLinesImpl(scene)
+  }
+
   def addCueLine(scene: SceneName, cueLine: CueLine): Try[Seq[CueLine]] = Try{
     if (!scenes.contains(scene)) {
       throw new NoSuchSceneException(scene.name)
@@ -95,29 +98,29 @@ object InMemoryDbService extends DbService {
     if (!lines.exists{case (_, cl) => cl.cueLineId == cueLine.cueLineId}) {
       lines = lines :+ (scene -> cueLine)
     }
-    loadCueLines(scene).get
+    loadCueLinesImpl(scene)
   }
 
 
-  override def removeCueLine(scene: SceneName, cueLine: CueLine): Try[Seq[CueLine]] = Try {
-    lines.filter{case (s, cl) => cl.cueLineId == cueLine.cueLineId}
-    loadCueLines(scene).get
+  override def removeCueLine(scene: SceneName, cueLineId: CueLineId): Try[Seq[CueLine]] = Try {
+    lines = lines.filterNot{case (s, cl) => cl.cueLineId == cueLineId}
+    loadCueLinesImpl(scene)
   }
 
   def saveCueLine(cueLine: CueLine): Try[Seq[CueLine]] = Try{
     val linesEntryOpt = lines.find{case(_, cl) => cl.cueLineId == cl.cueLineId}
     linesEntryOpt match {
       case Some((s, cl)) =>
-        lines = lines.filter{case(s1, cl1) => s1 == s && cl1 != cl} :+ (s -> cueLine)
-        loadCueLines(s).get
+        lines = lines.map(entry => {if (entry._2.cueLineId == cueLine.cueLineId) (entry._1, cueLine) else entry})
+        loadCueLinesImpl(s)
       case None =>
-        Seq()
+        throw new NoSuchCueLineException
     }
   }
 
   def setCueLines(scene: SceneName, newLines: Lines): Try[Seq[CueLine]] = Try {
     lines.filter{case (s, _) => s == scene} ++ newLines.lines.map(cl => scene -> cl)
-    loadCueLines(scene).get
+    loadCueLinesImpl(scene)
   }
   
   def addOrFindUser(emailAddress: String): Try[User] = Try{
@@ -133,7 +136,7 @@ object InMemoryDbService extends DbService {
 
 object DbService extends DbService {
   override def loadScenes(user: User): Try[Seq[SceneName]] = InMemoryDbService.loadScenes(user)
-  override def removeCueLine(scene: SceneName, cl: CueLine): Try[Seq[CueLine]] = InMemoryDbService.removeCueLine(scene, cl)
+  override def removeCueLine(scene: SceneName, clId: CueLineId): Try[Seq[CueLine]] = InMemoryDbService.removeCueLine(scene, clId)
   override def removeScene(scene: SceneName): Try[SceneName] = InMemoryDbService.removeScene(scene)
   override def addCueLine(scene: SceneName, cl: CueLine): Try[Seq[CueLine]] = InMemoryDbService.addCueLine(scene, cl)
   override def setCueLines(scene: SceneName, newLines: Lines): Try[Seq[CueLine]] = InMemoryDbService.setCueLines(scene, newLines)
@@ -144,10 +147,7 @@ object DbService extends DbService {
   override def addOrFindUser(email: String): Try[User] = InMemoryDbService.addOrFindUser(email)
 }
 
-
-
-
-
 class AlreadyExistsException(msg: String) extends Exception(msg)
 class NoSuchSceneException(sceneName: String) extends Exception(s"Scene $sceneName doesn't exist.")
 class NoSuchUserException(email: String) extends Exception(s"$email is not registered.")
+class NoSuchCueLineException extends Exception

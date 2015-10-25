@@ -5,9 +5,10 @@
 # Home page
 GET     /                          controllers.Application.index
 GET     /list/:scene               controllers.PromptController.list(scene: String)
-GET     /edit                      controllers.PromptController.edit
+#GET     /edit                      controllers.PromptController.edit()
 POST    /edit                      controllers.PromptController.add
 GET     /deleteScene/:scene        controllers.ScenesController.delete(scene: String)
+GET     /cueLine/delete/:scene/:cueLineId  controllers.PromptController.delete(scene: String, cueLineId: String)
 #GET     /lines                     controllers.LinesController.lines
 #POST    /lines                     controllers.LinesController.saveLines
 GET     /register                  @controllers.UserController.index
