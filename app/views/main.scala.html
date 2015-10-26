@@ -28,18 +28,12 @@
                                         }
                                     }
                                 }
-                                @*for(navItem <- navigation.items) {*@
-                                    @*<li>*@
-                                        @*<a href="@navItem.link">@navItem.label</a>*@
-                                    @*</li>*@
-                                @*}*@
                             </ul>
                             <ul class="nav navbar-nav navbar-right">
                                 <li><a>@navigation.userOpt.map(u => u.email).getOrElse("")</a></li>
                             </ul>
                         </div>
                     </div>
-
                 </nav>
             </header>
         }

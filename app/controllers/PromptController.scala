@@ -129,16 +129,23 @@ class PromptController extends Controller {
 
   }
 
-  def delete(sceneStream: String, cueLineId: String) = Action { request =>
-    val scene = SceneName.fromString(sceneStream)
-
-    DbService.removeCueLine(scene, CueLineId(cueLineId)) match {
-      case Success(_) =>
-        Redirect(routes.PromptController.list(sceneStream))
-      case Failure(t) =>
-        Redirect(routes.PromptController.list(sceneStream))
-          .flashing("failed" -> t.getMessage)
-    }
+  def delete() = Action { request =>
+    deleteForm.bindFromRequest()(request).fold(
+      formWithErrors => {
+        Redirect(routes.ScenesController.list)
+          .flashing("failed" -> "Delete failed")
+      },
+      formData => {
+        val scene = SceneName.fromString(formData.sceneStream)
+        DbService.removeCueLine(scene, CueLineId(formData.cueLineId)) match {
+          case Success(_) =>
+            Redirect(routes.PromptController.list(formData.sceneStream))
+          case Failure(t) =>
+            Redirect(routes.PromptController.list(formData.sceneStream))
+              .flashing("failed" -> t.getMessage)
+        }
+      }
+    )
   }
 
   val addForm = Form(
@@ -150,6 +157,13 @@ class PromptController extends Controller {
     )(AddCueLine.apply)(AddCueLine.unapply)
   )
 
+  val deleteForm = Form(
+    mapping(
+      "sceneStream" -> nonEmptyText,
+      "cueLineId" -> nonEmptyText
+    )(DeleteCueLine.apply)(DeleteCueLine.unapply)
+  )
 }
 
 case class AddCueLine(sceneStream: String, cueLineId: String, cue: String, line: String)
+case class DeleteCueLine(sceneStream: String, cueLineId: String)
