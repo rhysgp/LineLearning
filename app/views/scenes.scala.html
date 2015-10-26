@@ -7,7 +7,7 @@
                 <thead>
                     <tr>
                         <th>Scene</th>
-                        <th style="width: 100px">Action</th>
+                        <th style="width: 150px">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -16,6 +16,7 @@
                         <td><a href="@routes.PromptController.list(scene.toString)">@scene.name</a></td>
                         <td>
                             <a href="@routes.ScenesController.delete(scene.toString)" class="btn btn-default btn-sm" role="button">Delete...</a>
+                            <a href="@routes.PromptController.line(scene.toString, 0)" class="btn btn-default btn-sm" role="button">Run</a>
                         </td>
                     </tr>
                 }

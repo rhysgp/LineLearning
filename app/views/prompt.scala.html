@@ -1,5 +1,5 @@
-@import model.Navigation
-@(navigation: Navigation, index: Int, cue: String, line: String)
+@import model.{Navigation, SceneName}
+@(navigation: Navigation, scene: SceneName, index: Int, cue: String, line: String)
 @main("Cues", navigation) {
 
   <div class="container">
@@ -103,7 +103,9 @@
     $("#nextButton").click(function() {
       var currentIndex = Number($("#inputPrompt").data("index"));
       var nextIndex = currentIndex + 1;
-      window.location.href = "/" + nextIndex;
+      var urlTemplate = "@routes.PromptController.line(scene.toString, 99999)";
+
+      window.location.href = urlTemplate.replace("99999", "" + nextIndex);
     });
 
   </script>

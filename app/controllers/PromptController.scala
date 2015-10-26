@@ -12,25 +12,25 @@ import scala.util.{Failure, Success}
 
 class PromptController extends Controller {
 
-  def line(index: Int) = Action { implicit request =>
+  def line(sceneStream: String, index: Int) = Action { implicit request =>
     request.cookies.get(COOKIE_NAME) match {
 
       case Some(cookie) =>
         val user = User.fromString(cookie.value)
+        val scene = SceneName.fromString(sceneStream)
 
-        DbService.loadCueLines(SceneName(User("dummy", "dummy"), "dummy")) match {
+        DbService.loadCueLines(scene) match {
           case Success(lines) =>
             if (index >= 0 && index < lines.length) {
               val cueLine = lines(index)
-              Ok(views.html.prompt(buildNavigation(Option(user)), index, cueLine.cue, cueLine.line))
+              Ok(views.html.prompt(buildNavigation(Option(user)), scene, index, cueLine.cue, cueLine.line))
             } else {
-              Redirect(routes.PromptController.line(0))
+              Redirect(routes.PromptController.line(sceneStream, 0))
             }
 
           case Failure(t) =>
             Ok("Failed to load cue lines...")
         }
-
 
       case None =>
         Redirect(routes.UserController.register())
