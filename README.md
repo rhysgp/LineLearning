@@ -14,3 +14,4 @@ TODO
  6. Make 'Delete' work on Scenes list page.
  7. Make 'Next' not work when disabled.
  8. When the user has got to the end of the 'Run', show that it's complete.
+ 9. Add Google advertising.
