@@ -56,7 +56,9 @@ object InMemoryDbService extends DbService {
 
   def removeScene(scene: SceneName): Try[SceneName] = Try {
     if (scenes.contains(scene)) {
-      scenes.find(_ == scene).get
+      lines = lines.filter(_._1 == scene)
+      scenes = scenes.filterNot(_ == scene)
+      scene
     } else {
       throw new SceneNotFoundException(scene)
     }

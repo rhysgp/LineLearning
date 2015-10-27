@@ -15,7 +15,7 @@
                     <tr>
                         <td><a href="@routes.PromptController.list(scene.toString)">@scene.name</a></td>
                         <td>
-                            <a href="@routes.ScenesController.delete(scene.toString)" class="btn btn-default btn-sm" role="button">Delete...</a>
+                            <button id="deleteScene" class="btn btn-default btn-sm" role="button" data-scene="@scene.toString">Delete...</button>
                             <a href="@routes.PromptController.line(scene.toString, 0)" class="btn btn-default btn-sm" role="button">Run</a>
                         </td>
                     </tr>
@@ -51,8 +51,36 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary" id="addScene">Save changes</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="deleteConfirmModal" class="modal fade">
+        <div class="modal-dialog">
+            <form method="post" action="@routes.ScenesController.delete" data-toggle="validator">
+                <input id="sceneStream_delete" name="sceneStream" type="hidden" value="" />
+                <input id="cueLineId_delete" name="cueLineId" type="hidden" />
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Delete Cue Line</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <span>
+                                    Are you sure you want to delete the Scene?
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">OK</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     </div>
                 </div>
             </form>
@@ -62,6 +90,11 @@
     <script type="text/javascript">
         $("#sceneEdit").on("shown.bs.modal", function () {
               $('#sceneName').focus();
+        });
+
+        $("#deleteScene").click(function(e) {
+            $("#sceneStream_delete").val($(e.target).data("scene"));
+            $("#deleteConfirmModal").modal("show");
         });
     </script>
 }

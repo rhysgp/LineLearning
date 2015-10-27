@@ -70,25 +70,33 @@ class ScenesController extends Controller {
     }
   }
 
-  def delete(sceneStream: String) = Action { implicit request =>
+  def delete = Action { implicit request =>
     request.cookies.get(COOKIE_NAME) match {
 
       case Some(cookie) =>
 
         val user = User.fromString(cookie.value)
-        val scene = SceneName.fromString(sceneStream)
 
+        deleteSceneForm.bindFromRequest.fold(
+          formWithErrors => {
+            BadRequest(views.html.scenes(buildNavigation(Option(user)), loadScenes(user), sceneForm))
+          },
+          deleteSceneData => {
+            val user = User.fromString(cookie.value)
+            val scene = SceneName.fromString(deleteSceneData.sceneStream)
 
+            DbService.removeScene(scene) match {
 
-        DbService.removeScene(scene) match {
+              case Success(scenes) =>
+                Redirect(routes.ScenesController.list)
 
-          case Success(scenes) =>
-            Redirect(routes.ScenesController.list)
+              case Failure(t) =>
+                BadRequest(views.html.error(buildNavigation(Option(user)), t))
 
-          case Failure(t) =>
-            BadRequest(views.html.error(buildNavigation(Option(user)), t))
+            }
 
-        }
+          }
+        )
 
       case None =>
         Redirect(routes.UserController.register())
@@ -107,7 +115,12 @@ class ScenesController extends Controller {
     )(SceneFormData.apply)(SceneFormData.unapply)
   )
 
+  val deleteSceneForm = Form(
+    mapping(
+      "sceneStream" -> nonEmptyText
+    )(DeleteScene.apply)(DeleteScene.unapply)
+  )
 }
 
 case class SceneFormData(sceneName: String)
-
+case class DeleteScene(sceneStream: String)

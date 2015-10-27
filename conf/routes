@@ -7,7 +7,7 @@ GET     /                          controllers.Application.index
 GET     /list/:scene               controllers.PromptController.list(scene: String)
 #GET     /edit                      controllers.PromptController.edit()
 POST    /edit                      controllers.PromptController.add
-GET     /deleteScene/:scene        controllers.ScenesController.delete(scene: String)
+POST    /deleteScene               controllers.ScenesController.delete
 POST    /cueLine/delete            controllers.PromptController.delete
 #GET     /lines                     controllers.LinesController.lines
 #POST    /lines                     controllers.LinesController.saveLines
