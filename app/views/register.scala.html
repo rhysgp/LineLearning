@@ -10,7 +10,7 @@
                         <div class="@formGroupClass">
 
                             <label for="@field.name" class="control-label">Please enter your email address to register:</label>
-                            <input name="@field.name" type="text" class="form-control" placeholder="email@@address.please" value="@field.value.getOrElse("")" />
+                            <input name="@field.name" type="text" class="form-control" placeholder="email@@address.please" value="@field.value.getOrElse("")" autofocus="true" />
 
                             @if(field.hasErrors) {
                                 @for(err <- field.errors) {

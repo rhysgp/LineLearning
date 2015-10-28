@@ -15,7 +15,7 @@
           <div class="col-md-12">
             <div class="input-group">
               <span class="input-group-addon"><span class="glyphicon glyphicon-menu-right"></span></span>
-              <input type="text" id="line" class="form-control" />
+              <input type="text" id="line" class="form-control" autofocus />
               <span id="feedbackIcon" class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
             </div>
           </div>
@@ -25,13 +25,6 @@
       <div class="row">
         <div class="col-md-12">
           <div id="answer" class="answer hidden">@line</div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-12">
-          <button id="nextButton" class="btn btn-default disabled">Next</button>
-          <button id="showHideAnswerButton" class="btn btn-default" data-type="show">Show</button>
         </div>
       </div>
     </div>
@@ -71,7 +64,11 @@
       $formGroup.addClass("has-error");
     }
 
-    $("#line").keyup(event, function() {
+    var $line = $("#line");
+
+    $line.keydown(function() { $("#answer").addClass("hidden") });
+
+    $line.keyup(event, function() {
       var expected = $("#inputPrompt").data("line");
       var actual = $("#line").val();
 
@@ -83,6 +80,12 @@
         showWarning();
       } else {
         showError();
+      }
+    });
+
+    $line.keypress(function(e) {
+      if (e.keyCode === 13) {
+        nextPrompt();
       }
     });
 
@@ -100,13 +103,24 @@
       }
     });
 
-    $("#nextButton").click(function() {
-      var currentIndex = Number($("#inputPrompt").data("index"));
-      var nextIndex = currentIndex + 1;
-      var urlTemplate = "@routes.PromptController.line(scene.toString, 99999)";
+    $("#nextButton").click(nextPrompt);
 
-      window.location.href = urlTemplate.replace("99999", "" + nextIndex);
-    });
+    function nextPrompt() {
+
+      var $answer = $("#answer");
+
+      if (!$("#formGroup").hasClass("has-success") && $answer.hasClass("hidden")) {
+        $answer.removeClass("hidden");
+      } else {
+        var currentIndex = Number($("#inputPrompt").data("index"));
+        var nextIndex = currentIndex + 1;
+        var urlTemplate = "@routes.PromptController.line(scene.toString, 99999)";
+
+        window.location.href = urlTemplate.replace("99999", "" + nextIndex);
+      }
+
+
+    }
 
   </script>
 }
