@@ -1,13 +1,6 @@
 package controllers
 
-import model.{CueLineId, SceneName, CueLine, Lines, User}
-import play.api.libs.json._
 import play.api.mvc._
-import play.api.libs.functional.syntax._
-import services.DbService
-import support.CookieHelper._
-
-import scala.util.{Failure, Success}
 
 
 /*

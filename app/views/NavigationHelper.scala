@@ -1,7 +1,7 @@
 package views
 
 import controllers.routes
-import model.{SceneName, Navigation, NavItem, User}
+import model.{Scene, Navigation, NavItem, User}
 
 object NavigationHelper {
 
@@ -9,7 +9,7 @@ object NavigationHelper {
 
   def noNavigation = Navigation(None, Seq(home))
 
-  def buildNavigation(userOpt: Option[User], showSceneNav: Boolean = true, sceneName: Option[SceneName] = None): Navigation = {
+  def buildNavigation(userOpt: Option[User], showSceneNav: Boolean = true, sceneName: Option[Scene] = None): Navigation = {
     Navigation(
       userOpt,
       Seq(

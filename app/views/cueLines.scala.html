@@ -1,5 +1,5 @@
-@import model.{CueLine, Navigation, SceneName}
-@(navigation: Navigation, scene: SceneName, cueLines: Seq[CueLine], cueLineForm: Form[AddCueLine])
+@import model.{CueLine, Navigation, Scene}
+@(navigation: Navigation, scene: Scene, cueLines: Seq[CueLine], cueLineForm: Form[AddCueLine])
 @main("List", navigation) {
     <div class="container">
         <div class="table-responsive">

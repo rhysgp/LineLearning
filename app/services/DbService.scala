@@ -8,53 +8,66 @@ import scala.util.Try
 
 trait DbService {
 
-  def loadScenes(user: User): Try[Seq[SceneName]]
-  def addScene(user: User, sceneName: String): Try[Seq[SceneName]]
-  def removeScene(scene: SceneName): Try[SceneName]
-  def renameScene(scene: SceneName, newName: String): Try[SceneName]
+  def loadScenes(user: User): Try[Seq[Scene]]
+  def addScene(user: User, sceneName: String): Try[Seq[Scene]]
+  def removeScene(scene: Scene): Try[Scene]
+  def renameScene(scene: Scene, newName: String): Try[Scene]
 
-  def loadCueLines(scene: SceneName): Try[Seq[CueLine]]
-  def addCueLine(scene: SceneName, cl: CueLine): Try[Seq[CueLine]]
-  def removeCueLine(scene: SceneName, cueLineId: CueLineId): Try[Seq[CueLine]]
+  def loadCueLines(sceneId: SceneId): Try[Seq[CueLine]]
+  def addCueLine(sceneId: SceneId, cl: CueLine): Try[Seq[CueLine]]
+  def removeCueLine(sceneId: SceneId, cueLineId: CueLineId): Try[Seq[CueLine]]
   def saveCueLine(cl: CueLine): Try[Seq[CueLine]]
 
-  def setCueLines(scene: SceneName, newLines: Lines): Try[Seq[CueLine]]
+  def setCueLines(sceneId: SceneId, newLines: Lines): Try[Seq[CueLine]]
 
   def addOrFindUser(email: String): Try[User]
 }
 
-class SceneNotFoundException(val sceneName: SceneName) extends Exception
+class SceneNotFoundException(val sceneName: Scene) extends Exception
 
 object InMemoryDbService extends DbService {
 
-  var scenes = Seq[SceneName]()
-  var lines = Seq[(SceneName, CueLine)]()
+  var scenes = Seq[Scene]()
+  var lines = Seq[(SceneId, CueLine)]()
   var users = Seq[User]()
+  var userScenes = Seq[(SceneId, UserEmail)]()
 
-  def loadScenes(user: User): Try[Seq[SceneName]] = Try { loadScenesImpl(user) }
+  private def userSceneIds(user: User): Seq[SceneId] =
+    userScenes.filter{ case (_, email) => email == user.email }.map{ case (sceneId, _) => sceneId }
 
-  def loadScenesImpl(user: User): Seq[SceneName] = {
-
-    if (!users.contains(user)) {
-      throw new NoSuchUserException(user.email)
-    }
-
-    scenes.filter(_.user == user)
+  private def scenesForUser(user: User): Seq[Scene] = {
+    val sceneIds =  userSceneIds(user)
+    scenes.filter(scene => sceneIds.contains(scene.id))
   }
 
+  private def checkExistentialAngst(user: User) =
+    if (!users.contains(user)) { throw new NoSuchUserException(user.email.address) }
 
-  def addScene(user: User, sceneName: String): Try[Seq[SceneName]] = Try {
+  private def findScene(sceneId: SceneId): Scene =
+    scenes.find(_.id == sceneId).getOrElse(throw new NoSuchSceneException(sceneId))
 
-    if (scenes.contains(SceneName(user, sceneName))) {
+  def loadScenes(user: User): Try[Seq[Scene]] = Try { loadScenesImpl(user) }
+
+  def loadScenesImpl(user: User): Seq[Scene] = {
+    checkExistentialAngst(user)
+    scenesForUser(user)
+  }
+
+  def addScene(user: User, sceneName: String): Try[Seq[Scene]] = Try {
+
+    checkExistentialAngst(user)
+
+    if (scenesForUser(user).exists(s => s.name == sceneName))
       throw new AlreadyExistsException(s"Scene '$sceneName' already exists.")
-    }
 
-    scenes = scenes :+ SceneName(user, sceneName)
+    val newScene = Scene(SceneId.create(), sceneName)
+    scenes = scenes :+ newScene
+    userScenes = userScenes :+ (newScene.id, user.email)
 
     loadScenesImpl(user)
   }
 
-  def removeScene(scene: SceneName): Try[SceneName] = Try {
+  def removeScene(scene: Scene): Try[Scene] = Try {
     if (scenes.contains(scene)) {
       lines = lines.filter(_._1 == scene)
       scenes = scenes.filterNot(_ == scene)
@@ -64,7 +77,7 @@ object InMemoryDbService extends DbService {
     }
   }
 
-  override def renameScene(scene: SceneName, newName: String): Try[SceneName] = Try {
+  override def renameScene(scene: Scene, newName: String): Try[Scene] = Try {
     if (scenes.contains(scene)) {
       val newScene = scene.copy(name = newName)
       scenes = scenes.filterNot(_ == scene) :+ newScene
@@ -74,39 +87,35 @@ object InMemoryDbService extends DbService {
     }
   }
 
-  def loadCueLinesImpl(scene: SceneName): Seq[CueLine] = {
-    if (!users.contains(scene.user)) {
-      throw new NoSuchUserException(scene.user.email)
-    }
+  def loadCueLinesImpl(sceneId: SceneId): Seq[CueLine] = {
 
-    if (!scenes.contains(scene)) {
-      throw new NoSuchSceneException(scene.name)
-    }
+    findScene(sceneId) // check it exists
 
     lines
-      .filter{case (s, _) => s == scene}
+      .filter{case (sId, _) => sId == sceneId}
       .map{case (_, cl) => cl}
   }
 
-  def loadCueLines(scene: SceneName): Try[Seq[CueLine]] = Try{
-    loadCueLinesImpl(scene)
+  def loadCueLines(sceneId: SceneId): Try[Seq[CueLine]] = Try{
+    loadCueLinesImpl(sceneId)
   }
 
-  def addCueLine(scene: SceneName, cueLine: CueLine): Try[Seq[CueLine]] = Try{
-    if (!scenes.contains(scene)) {
-      throw new NoSuchSceneException(scene.name)
-    }
+  def addCueLine(sceneId: SceneId, cueLine: CueLine): Try[Seq[CueLine]] = Try{
+
+    val scene = findScene(sceneId)
 
     if (!lines.exists{case (_, cl) => cl.cueLineId == cueLine.cueLineId}) {
-      lines = lines :+ (scene -> cueLine)
+      lines = lines :+ (scene.id -> cueLine)
+    } else {
+      saveCueLine(cueLine)
     }
-    loadCueLinesImpl(scene)
+
+    loadCueLinesImpl(sceneId)
   }
 
-
-  override def removeCueLine(scene: SceneName, cueLineId: CueLineId): Try[Seq[CueLine]] = Try {
+  override def removeCueLine(sceneId: SceneId, cueLineId: CueLineId): Try[Seq[CueLine]] = Try {
     lines = lines.filterNot{case (s, cl) => cl.cueLineId == cueLineId}
-    loadCueLinesImpl(scene)
+    loadCueLinesImpl(sceneId)
   }
 
   def saveCueLine(cueLine: CueLine): Try[Seq[CueLine]] = Try{
@@ -120,16 +129,16 @@ object InMemoryDbService extends DbService {
     }
   }
 
-  def setCueLines(scene: SceneName, newLines: Lines): Try[Seq[CueLine]] = Try {
-    lines.filter{case (s, _) => s == scene} ++ newLines.lines.map(cl => scene -> cl)
-    loadCueLinesImpl(scene)
+  def setCueLines(sceneId: SceneId, newLines: Lines): Try[Seq[CueLine]] = Try {
+    lines.filter{case (s, _) => s == sceneId} ++ newLines.lines.map(cl => sceneId -> cl)
+    loadCueLinesImpl(sceneId)
   }
   
   def addOrFindUser(emailAddress: String): Try[User] = Try{
     users
       .find(_.email == emailAddress)
       .getOrElse {
-        val user = User(UUID.randomUUID().toString, emailAddress)
+        val user = User(UUID.randomUUID().toString, UserEmail(emailAddress))
         users = users :+ user
         user
       }
@@ -137,19 +146,19 @@ object InMemoryDbService extends DbService {
 }
 
 object DbService extends DbService {
-  override def loadScenes(user: User): Try[Seq[SceneName]] = InMemoryDbService.loadScenes(user)
-  override def removeCueLine(scene: SceneName, clId: CueLineId): Try[Seq[CueLine]] = InMemoryDbService.removeCueLine(scene, clId)
-  override def removeScene(scene: SceneName): Try[SceneName] = InMemoryDbService.removeScene(scene)
-  override def addCueLine(scene: SceneName, cl: CueLine): Try[Seq[CueLine]] = InMemoryDbService.addCueLine(scene, cl)
-  override def setCueLines(scene: SceneName, newLines: Lines): Try[Seq[CueLine]] = InMemoryDbService.setCueLines(scene, newLines)
+  override def loadScenes(user: User): Try[Seq[Scene]] = InMemoryDbService.loadScenes(user)
+  override def removeCueLine(scene: Scene, clId: CueLineId): Try[Seq[CueLine]] = InMemoryDbService.removeCueLine(scene, clId)
+  override def removeScene(scene: Scene): Try[Scene] = InMemoryDbService.removeScene(scene)
+  override def addCueLine(scene: Scene, cl: CueLine): Try[Seq[CueLine]] = InMemoryDbService.addCueLine(scene, cl)
+  override def setCueLines(scene: Scene, newLines: Lines): Try[Seq[CueLine]] = InMemoryDbService.setCueLines(scene, newLines)
   override def saveCueLine(cl: CueLine): Try[Seq[CueLine]] = InMemoryDbService.saveCueLine(cl)
-  override def loadCueLines(scene: SceneName): Try[Seq[CueLine]] = InMemoryDbService.loadCueLines(scene)
-  override def addScene(user: User, sceneName: String): Try[Seq[SceneName]] = InMemoryDbService.addScene(user, sceneName)
-  override def renameScene(scene: SceneName, newName: String): Try[SceneName] = InMemoryDbService.renameScene(scene, newName)
+  override def loadCueLines(sceneId: SceneId): Try[Seq[CueLine]] = InMemoryDbService.loadCueLines(sceneId)
+  override def addScene(user: User, sceneName: String): Try[Seq[Scene]] = InMemoryDbService.addScene(user, sceneName)
+  override def renameScene(scene: Scene, newName: String): Try[Scene] = InMemoryDbService.renameScene(scene, newName)
   override def addOrFindUser(email: String): Try[User] = InMemoryDbService.addOrFindUser(email)
 }
 
 class AlreadyExistsException(msg: String) extends Exception(msg)
-class NoSuchSceneException(sceneName: String) extends Exception(s"Scene $sceneName doesn't exist.")
+class NoSuchSceneException(sceneId: SceneId) extends Exception(s"Scene ${sceneId.id} doesn't exist.")
 class NoSuchUserException(email: String) extends Exception(s"$email is not registered.")
 class NoSuchCueLineException extends Exception

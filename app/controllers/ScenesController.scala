@@ -1,11 +1,10 @@
 package controllers
 
-import model.SceneName
-import play.api.data._
+import model.{Scene, User}
 import play.api.data.Forms._
+import play.api.data._
 import play.api.mvc.{Action, _}
-import model.User
-import services.{NoSuchUserException, AlreadyExistsException, DbService}
+import services.{AlreadyExistsException, DbService, NoSuchUserException}
 import support.CookieHelper
 import support.CookieHelper._
 import views.NavigationHelper._
@@ -83,7 +82,7 @@ class ScenesController extends Controller {
           },
           deleteSceneData => {
             val user = User.fromString(cookie.value)
-            val scene = SceneName.fromString(deleteSceneData.sceneStream)
+            val scene = Scene.fromString(deleteSceneData.sceneStream)
 
             DbService.removeScene(scene) match {
 
