@@ -22,9 +22,14 @@ class PromptController extends Controller {
           case Success(lines) =>
             if (index >= 0 && index < lines.length) {
               val cueLine = lines(index)
-              Ok(views.html.prompt(buildNavigation(Option(user)), scene, index, cueLine.cue, cueLine.line))
+              DbService.scene(SceneId(sceneId)) match {
+                case Success(scene) =>
+                  Ok(views.html.prompt(buildNavigation(Option(user)), scene, index, cueLine.cue, cueLine.line))
+                case Failure(t) =>
+                  Ok(t.getMessage)
+              }
             } else {
-              Redirect(routes.PromptController.line(sceneStream, 0))
+              Redirect(routes.PromptController.line(sceneId, 0))
             }
 
           case Failure(t) =>
@@ -36,19 +41,24 @@ class PromptController extends Controller {
     }
   }
 
-  def list(sceneStream: String) = Action { implicit request =>
+  def list(sceneId: String) = Action { implicit request =>
     request.cookies.get(COOKIE_NAME) match {
 
       case Some(cookie) =>
         val user = User.fromString(cookie.value)
-        val scene = Scene.fromString(sceneStream)
-        DbService.loadCueLines(scene) match {
-          case Success(lines) =>
-            val navigation = buildNavigation(Option(user), sceneName = Option(scene))
-            Ok(views.html.cueLines(navigation, scene, lines, addForm))
+        DbService.scene(SceneId(sceneId)) match {
+          case Success(scene) =>
+            DbService.loadCueLines(SceneId(sceneId)) match {
+              case Success(lines) =>
+                val navigation = buildNavigation(Option(user), sceneName = Option(scene))
+                Ok(views.html.cueLines(navigation, scene, lines, addForm))
+
+              case Failure(t) =>
+                Ok("Failed to load cue lines...")
+            }
 
           case Failure(t) =>
-            Ok("Failed to load cue lines...")
+            Ok(t.getMessage)
         }
 
       case None =>
@@ -56,16 +66,15 @@ class PromptController extends Controller {
     }
   }
 
-  def edit(sceneStream: String, index: Int) = Action { request =>
+  def edit(sceneId: String, index: Int) = Action { request =>
 
     request.cookies.get(COOKIE_NAME) match {
 
       case Some(cookie) =>
 
         val user = User.fromString(cookie.value)
-        val scene = Scene.fromString(sceneStream)
 
-        DbService.loadCueLines(scene) match {
+        DbService.loadCueLines(SceneId(sceneId)) match {
           case Success(lines) =>
             Ok(views.html.add(buildNavigation(Option(user)), addForm, lines))
 
@@ -88,36 +97,34 @@ class PromptController extends Controller {
 
         addForm.bindFromRequest()(request).fold(
           formWithErrors => {
-            DbService.loadCueLines(Scene(user, "dummy")) match {
-              case Success(lines) =>
-                BadRequest(views.html.add(buildNavigation(Option(user)), formWithErrors, lines))
-
-              case Failure(t) =>
-                Ok("Failed to load cue lines...")
-            }
+            Ok(formWithErrors.toString)
           },
           formData => {
-            val scene = Scene.fromString(formData.sceneStream)
 
-            if (formData.cueLineId.length > 0) {
-              val modifiedCl = CueLine(CueLineId(formData.cueLineId), formData.cue, formData.line)
-              DbService.saveCueLine(modifiedCl) match {
-                case Success(cueLines) =>
-                  Redirect(routes.PromptController.list(scene.toString))
-                    .flashing("failed" -> "Error!")
-                case Failure(t) =>
-                  Redirect(routes.PromptController.list(scene.toString))
-                    .flashing("failed" -> t.getMessage)
-              }
-            } else {
-              DbService.addCueLine(scene, CueLine(CueLineId.create(), formData.cue, formData.line))
-              DbService.loadCueLines(scene) match {
-                case Success(lines) =>
-                  Redirect(routes.PromptController.list(scene.toString))
+            DbService.scene(SceneId(formData.sceneId)) match {
+              case Success(scene) =>
+                if (formData.cueLineId.length > 0) {
+                  val modifiedCl = CueLine(CueLineId(formData.cueLineId), formData.cue, formData.line)
+                  DbService.saveCueLine(modifiedCl) match {
+                    case Success(cueLines) =>
+                      Redirect(routes.PromptController.list(scene.toString))
+                        .flashing("failed" -> "Error!")
+                    case Failure(t) =>
+                      Redirect(routes.PromptController.list(scene.toString))
+                        .flashing("failed" -> t.getMessage)
+                  }
+                } else {
+                  DbService.addCueLine(scene.id, CueLine(CueLineId.create(), formData.cue, formData.line)) match {
+                    case Success(lines) =>
+                      Redirect(routes.PromptController.list(scene.toString))
 
-                case Failure(t) =>
-                  Ok("Failed to load cue lines...")
-              }
+                    case Failure(t) =>
+                      Ok("Failed to load cue lines...")
+                  }
+                }
+
+              case Failure (t) =>
+                Ok("Failed to load cue lines...")
             }
           }
         )
@@ -125,7 +132,6 @@ class PromptController extends Controller {
       case None =>
         Redirect(routes.UserController.register())
     }
-
   }
 
   def delete() = Action { request =>
@@ -135,12 +141,12 @@ class PromptController extends Controller {
           .flashing("failed" -> "Delete failed")
       },
       formData => {
-        val scene = Scene.fromString(formData.sceneStream)
-        DbService.removeCueLine(scene, CueLineId(formData.cueLineId)) match {
+        val sceneId = SceneId(formData.sceneId)
+        DbService.removeCueLine(sceneId, CueLineId(formData.cueLineId)) match {
           case Success(_) =>
-            Redirect(routes.PromptController.list(formData.sceneStream))
+            Redirect(routes.PromptController.list(formData.sceneId))
           case Failure(t) =>
-            Redirect(routes.PromptController.list(formData.sceneStream))
+            Redirect(routes.PromptController.list(formData.sceneId))
               .flashing("failed" -> t.getMessage)
         }
       }

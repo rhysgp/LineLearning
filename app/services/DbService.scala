@@ -8,10 +8,11 @@ import scala.util.Try
 
 trait DbService {
 
+  def scene(sceneId: SceneId): Try[Scene]
   def loadScenes(user: User): Try[Seq[Scene]]
   def addScene(user: User, sceneName: String): Try[Seq[Scene]]
-  def removeScene(scene: Scene): Try[Scene]
-  def renameScene(scene: Scene, newName: String): Try[Scene]
+  def removeScene(sceneId: SceneId): Try[Scene]
+  def renameScene(sceneId: SceneId, newName: String): Try[Scene]
 
   def loadCueLines(sceneId: SceneId): Try[Seq[CueLine]]
   def addCueLine(sceneId: SceneId, cl: CueLine): Try[Seq[CueLine]]
@@ -46,6 +47,8 @@ object InMemoryDbService extends DbService {
   private def findScene(sceneId: SceneId): Scene =
     scenes.find(_.id == sceneId).getOrElse(throw new NoSuchSceneException(sceneId))
 
+  def scene(sceneId: SceneId) = Try { findScene(sceneId) }
+
   def loadScenes(user: User): Try[Seq[Scene]] = Try { loadScenesImpl(user) }
 
   def loadScenesImpl(user: User): Seq[Scene] = {
@@ -67,17 +70,15 @@ object InMemoryDbService extends DbService {
     loadScenesImpl(user)
   }
 
-  def removeScene(scene: Scene): Try[Scene] = Try {
-    if (scenes.contains(scene)) {
-      lines = lines.filter(_._1 == scene)
-      scenes = scenes.filterNot(_ == scene)
-      scene
-    } else {
-      throw new SceneNotFoundException(scene)
-    }
+  def removeScene(sceneId: SceneId): Try[Scene] = Try {
+    val scene = findScene(sceneId)
+    lines = lines.filter(_._1 == sceneId)
+    scenes = scenes.filterNot(_ == scene)
+    scene
   }
 
-  override def renameScene(scene: Scene, newName: String): Try[Scene] = Try {
+  override def renameScene(sceneId: SceneId, newName: String): Try[Scene] = Try {
+    val scene = findScene(sceneId)
     if (scenes.contains(scene)) {
       val newScene = scene.copy(name = newName)
       scenes = scenes.filterNot(_ == scene) :+ newScene
@@ -136,7 +137,7 @@ object InMemoryDbService extends DbService {
   
   def addOrFindUser(emailAddress: String): Try[User] = Try{
     users
-      .find(_.email == emailAddress)
+      .find(_.email.address == emailAddress)
       .getOrElse {
         val user = User(UUID.randomUUID().toString, UserEmail(emailAddress))
         users = users :+ user
@@ -146,15 +147,16 @@ object InMemoryDbService extends DbService {
 }
 
 object DbService extends DbService {
+  override def scene(sceneId: SceneId): Try[Scene] = InMemoryDbService.scene(sceneId)
   override def loadScenes(user: User): Try[Seq[Scene]] = InMemoryDbService.loadScenes(user)
-  override def removeCueLine(scene: Scene, clId: CueLineId): Try[Seq[CueLine]] = InMemoryDbService.removeCueLine(scene, clId)
-  override def removeScene(scene: Scene): Try[Scene] = InMemoryDbService.removeScene(scene)
-  override def addCueLine(scene: Scene, cl: CueLine): Try[Seq[CueLine]] = InMemoryDbService.addCueLine(scene, cl)
-  override def setCueLines(scene: Scene, newLines: Lines): Try[Seq[CueLine]] = InMemoryDbService.setCueLines(scene, newLines)
+  override def removeCueLine(sceneId: SceneId, clId: CueLineId): Try[Seq[CueLine]] = InMemoryDbService.removeCueLine(sceneId, clId)
+  override def removeScene(sceneId: SceneId): Try[Scene] = InMemoryDbService.removeScene(sceneId)
+  override def addCueLine(sceneId: SceneId, cl: CueLine): Try[Seq[CueLine]] = InMemoryDbService.addCueLine(sceneId, cl)
+  override def setCueLines(sceneId: SceneId, newLines: Lines): Try[Seq[CueLine]] = InMemoryDbService.setCueLines(sceneId, newLines)
   override def saveCueLine(cl: CueLine): Try[Seq[CueLine]] = InMemoryDbService.saveCueLine(cl)
   override def loadCueLines(sceneId: SceneId): Try[Seq[CueLine]] = InMemoryDbService.loadCueLines(sceneId)
   override def addScene(user: User, sceneName: String): Try[Seq[Scene]] = InMemoryDbService.addScene(user, sceneName)
-  override def renameScene(scene: Scene, newName: String): Try[Scene] = InMemoryDbService.renameScene(scene, newName)
+  override def renameScene(sceneId: SceneId, newName: String): Try[Scene] = InMemoryDbService.renameScene(sceneId, newName)
   override def addOrFindUser(email: String): Try[User] = InMemoryDbService.addOrFindUser(email)
 }
 

@@ -27,6 +27,7 @@
         </div>
         <div>
             <button class="btn btn-primary" id="addCueLineButton">Add...</button>
+            <a class="btn btn-default" id="runButton" href="@routes.PromptController.line(scene.id.id, 0)">Run...</a>
         </div>
     </div>
 
@@ -43,7 +44,7 @@
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <input type="hidden" name="cueLineId" id="cueLineId" />
-                                    <input type="hidden" name="sceneStream" value="@scene" />
+                                    <input type="hidden" name="sceneId" value="@scene" />
                                     <label for="prompt" class="sr-only">Cue</label>
                                     <textarea id="cue" name="cue" class="form-control" placeholder="Cue..."></textarea>
                                     <label for="line" class="sr-only">Line</label>
@@ -64,7 +65,7 @@
     <div id="deleteConfirmModal" class="modal fade">
         <div class="modal-dialog">
             <form method="post" action="@routes.PromptController.delete" data-toggle="validator">
-                <input id="sceneStream_delete" name="sceneStream" type="hidden" value="@scene.toString" />
+                <input id="sceneId_delete" name="sceneId" type="hidden" value="@scene.toString" />
                 <input id="cueLineId_delete" name="cueLineId" type="hidden" />
                 <div class="modal-content">
                     <div class="modal-header">

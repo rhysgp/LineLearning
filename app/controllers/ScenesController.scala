@@ -1,6 +1,6 @@
 package controllers
 
-import model.{Scene, User}
+import model.{SceneId, User}
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc.{Action, _}
@@ -82,9 +82,8 @@ class ScenesController extends Controller {
           },
           deleteSceneData => {
             val user = User.fromString(cookie.value)
-            val scene = Scene.fromString(deleteSceneData.sceneStream)
 
-            DbService.removeScene(scene) match {
+            DbService.removeScene(SceneId(deleteSceneData.sceneId)) match {
 
               case Success(scenes) =>
                 Redirect(routes.ScenesController.list)
@@ -122,4 +121,4 @@ class ScenesController extends Controller {
 }
 
 case class SceneFormData(sceneName: String)
-case class DeleteScene(sceneStream: String)
+case class DeleteScene(sceneId: String)
