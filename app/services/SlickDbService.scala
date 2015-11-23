@@ -42,6 +42,9 @@ class SlickDbService(dbConfig: DatabaseConfig[JdbcProfile]) extends DbService {
     dbConfig.db.run(DBIO.seq(DbData.schemaCreate))
   }
 
+  def addScene1(user: User, sceneName: String): Future[Seq[Scene]] = {
+
+  }
 
   def addOrFindUser1(email: String): Future[User] = {
     dbConfig.db.run(DbData.findUserByEmail(email).result.headOption)

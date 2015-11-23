@@ -21,6 +21,8 @@ object DbData {
     User(guid, UserEmail(emailAddress))
   }
 
+  def
+
   def schemaCreate = (users.schema ++ scenes.schema ++ cueLines.schema).create
 
 
