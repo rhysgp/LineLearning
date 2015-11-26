@@ -5,22 +5,25 @@ import play.api.data._
 import play.api.data.Forms._
 import play.api.i18n.{MessagesApi, I18nSupport}
 import play.api.mvc._
-import services.DbService
+import services.DbServiceAsync
 import support.CookieHelper
 
-import scala.util.{Failure, Success}
 import views.NavigationHelper._
 
-class UserController @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
+import scala.concurrent.Future
+
+class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbServiceAsync) extends Controller with I18nSupport {
 
   def index() = Action { implicit request =>
     Ok(views.html.register(noNavigation, registerForm))
   }
 
-  def register() = Action { implicit request =>
+  def register() = Action.async { implicit request =>
     registerForm.bindFromRequest.fold(
       formWithErrors =>
-        BadRequest(views.html.register(noNavigation, formWithErrors)),
+        Future(BadRequest(views.html.register(noNavigation, formWithErrors))),
       registerData   => {
 
         // actually do the register:
@@ -30,15 +33,14 @@ class UserController @Inject()(val messagesApi: MessagesApi) extends Controller 
         //     i) Find the existing user's GUID and send them an email; OR
         //    ii) Create a new user, generating the GUID, and send them an email
 
-        DbService.addOrFindUser(registerData.email) match {
-          case Success(user) =>
+        dbService.addOrFindUser(registerData.email)
+          .map { user =>
             Redirect(routes.ScenesController.list())
               .withCookies(Cookie(CookieHelper.COOKIE_NAME, user.toString))
-
-          case Failure(t) =>
-            Ok(views.html.error(noNavigation, t))
-        }
-
+          }
+          .recover {
+            case e: Exception => Redirect(routes.UserController.index()).flashing("failure" -> e.getMessage)
+          }
       }
     )
   }

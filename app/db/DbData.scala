@@ -15,13 +15,14 @@ object DbData {
   val cueLines = TableQuery[CueLines]
 
   val findUserByEmail = DbData.users.findBy(_.email)
+  val findSceneById = DbData.scenes.findBy(_.id)
+  val findUserScenes = DbData.scenes.findBy(_.userId)
+
   def createUser(emailAddress: String) = {
     val guid = UUID.randomUUID().toString
     DbData.users += (guid, emailAddress, "password")
     User(guid, UserEmail(emailAddress))
   }
-
-  def
 
   def schemaCreate = (users.schema ++ scenes.schema ++ cueLines.schema).create
 
