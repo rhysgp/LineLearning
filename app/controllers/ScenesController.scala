@@ -14,7 +14,7 @@ import scala.util.{Failure, Success}
 
 class ScenesController extends Controller {
 
-  def list = Action { implicit request =>
+  def list() = Action { implicit request =>
 
     request.cookies.get(COOKIE_NAME) match {
 

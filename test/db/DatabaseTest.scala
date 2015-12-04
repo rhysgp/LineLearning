@@ -1,18 +1,21 @@
 package db
 
+import javax.inject.Inject
+
+import play.api.db.slick.DatabaseConfigProvider
 import play.api.test.{PlaySpecification, WithApplication}
 import services.SlickDbService
 
-class DatabaseTest extends PlaySpecification {
+class DatabaseTest @Inject() (dbConfigProvider: DatabaseConfigProvider) extends PlaySpecification {
 
   "a user" should new WithApplication with WithDatabaseConfig {
 
-    val dbService = new SlickDbService(dbConfig)
+    val dbService = new SlickDbService(dbConfigProvider)
     dbService.createDb()
     val futureTestUser = dbService.addOrFindUser("test@example.com")
     val testUser = await(futureTestUser)
 
-    "have correct email address on creation" in { testUser.email.address must beEqualTo("test@example.com") }
+    "have correct email address on creation" in { testUser.email must beEqualTo("test@example.com") }
     "have an id on creation" in {
       testUser.id must not(beNull)
       testUser.id.length must be_>(0)

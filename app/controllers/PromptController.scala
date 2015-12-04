@@ -1,6 +1,7 @@
 package controllers
 
-import model._
+import db._
+import db.Conversions._
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc._
@@ -10,19 +11,19 @@ import views.NavigationHelper._
 
 import scala.util.{Failure, Success}
 
-class PromptController extends Controller {
+class PromptController(dbService: DbService) extends Controller {
 
   def line(sceneId: String, index: Int) = Action { implicit request =>
     request.cookies.get(COOKIE_NAME) match {
 
       case Some(cookie) =>
-        val user = User.fromString(cookie.value)
+        val user: User = cookie.value
 
-        DbService.loadCueLines(SceneId(sceneId)) match {
+        dbService.loadCueLines(sceneId) match {
           case Success(lines) =>
             if (index >= 0 && index < lines.length) {
               val cueLine = lines(index)
-              DbService.scene(SceneId(sceneId)) match {
+              dbService.scene(sceneId) match {
                 case Success(scene) =>
                   Ok(views.html.prompt(buildNavigation(Option(user)), scene, index, cueLine.cue, cueLine.line))
                 case Failure(t) =>
@@ -46,9 +47,9 @@ class PromptController extends Controller {
 
       case Some(cookie) =>
         val user = User.fromString(cookie.value)
-        DbService.scene(SceneId(sceneId)) match {
+        dbService.scene(sceneId) match {
           case Success(scene) =>
-            DbService.loadCueLines(SceneId(sceneId)) match {
+            dbService.loadCueLines(sceneId) match {
               case Success(lines) =>
                 val navigation = buildNavigation(Option(user), sceneName = Option(scene))
                 Ok(views.html.cueLines(navigation, scene, lines, addForm))
@@ -74,7 +75,7 @@ class PromptController extends Controller {
 
         val user = User.fromString(cookie.value)
 
-        DbService.loadCueLines(SceneId(sceneId)) match {
+        dbService.loadCueLines(sceneId) match {
           case Success(lines) =>
             Ok(views.html.add(buildNavigation(Option(user)), addForm, lines))
 
@@ -101,11 +102,11 @@ class PromptController extends Controller {
           },
           formData => {
 
-            DbService.scene(SceneId(formData.sceneId)) match {
+            dbService.scene(formData.sceneId) match {
               case Success(scene) =>
                 if (formData.cueLineId.length > 0) {
-                  val modifiedCl = CueLine(CueLineId(formData.cueLineId), formData.cue, formData.line)
-                  DbService.saveCueLine(modifiedCl) match {
+                  val modifiedCl = CueLine(formData.cueLineId, formData.cue, formData.line)
+                  dbService.saveCueLine(modifiedCl) match {
                     case Success(cueLines) =>
                       Redirect(routes.PromptController.list(scene.toString))
                         .flashing("failed" -> "Error!")
@@ -114,7 +115,7 @@ class PromptController extends Controller {
                         .flashing("failed" -> t.getMessage)
                   }
                 } else {
-                  DbService.addCueLine(scene.id, CueLine(CueLineId.create(), formData.cue, formData.line)) match {
+                  dbService.addCueLine(scene.id, CueLine(CueLineId.create(), formData.cue, formData.line)) match {
                     case Success(lines) =>
                       Redirect(routes.PromptController.list(scene.toString))
 
@@ -142,7 +143,7 @@ class PromptController extends Controller {
       },
       formData => {
         val sceneId = SceneId(formData.sceneId)
-        DbService.removeCueLine(sceneId, CueLineId(formData.cueLineId)) match {
+        dbService.removeCueLine(sceneId, CueLineId(formData.cueLineId)) match {
           case Success(_) =>
             Redirect(routes.PromptController.list(formData.sceneId))
           case Failure(t) =>

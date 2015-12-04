@@ -1,8 +1,10 @@
 package services
 
 import java.util.UUID
+import javax.inject.Inject
 
-import model._
+import com.google.inject.ImplementedBy
+import model.Lines
 import play.api.Play
 import play.api.db.slick.DatabaseConfigProvider
 import slick.backend.DatabaseConfig
@@ -13,68 +15,64 @@ import scala.util.Try
 
 import db._
 
-
+@ImplementedBy(classOf[SlickDbService])
 trait DbServiceAsync {
 
-  def scene(sceneId: SceneId): Future[Scene]
+  def scene(sceneId: String): Future[Scene]
   def loadScenes(user: User): Future[Seq[Scene]]
   def addScene(user: User, sceneName: String): Future[Seq[Scene]]
-  def removeScene(sceneId: SceneId): Future[Scene]
-  def renameScene(sceneId: SceneId, newName: String): Future[Scene]
+  def removeScene(sceneId: String): Future[Scene]
+  def renameScene(sceneId: String, newName: String): Future[Scene]
 
-  def loadCueLines(sceneId: SceneId): Future[Seq[CueLine]]
-  def addCueLine(sceneId: SceneId, cl: CueLine): Future[Seq[CueLine]]
-  def removeCueLine(sceneId: SceneId, cueLineId: CueLineId): Future[Seq[CueLine]]
+  def loadCueLines(sceneId: String): Future[Seq[CueLine]]
+  def addCueLine(sceneId: String, cl: CueLine): Future[Seq[CueLine]]
+  def removeCueLine(sceneId: String, cueLineId: String): Future[Seq[CueLine]]
   def saveCueLine(cl: CueLine): Future[Seq[CueLine]]
 
-  def setCueLines(sceneId: SceneId, newLines: Lines): Future[Seq[CueLine]]
+  def setCueLines(sceneId: String, newLines: Lines): Future[Seq[CueLine]]
 
   def addOrFindUser(email: String): Future[User]
 }
 
 
-class SlickDbService(dbConfig: DatabaseConfig[JdbcProfile]) extends DbServiceAsync {
+class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extends DbServiceAsync {
+
+  val dbConfig = dbConfigProvider.get[JdbcProfile]
+
   import dbConfig.driver.api._
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  override def scene(sceneId: SceneId): Future[Scene] = ???
+  override def scene(sceneId: String): Future[Scene] = ???
 
-  override def removeCueLine(sceneId: SceneId, cueLineId: CueLineId): Future[Seq[CueLine]] = ???
+  override def removeCueLine(sceneId: String, cueLineId: String): Future[Seq[CueLine]] = ???
 
-  override def removeScene(sceneId: SceneId): Future[Scene] = ???
+  override def removeScene(sceneId: String): Future[Scene] = ???
 
-  override def addCueLine(sceneId: SceneId, cl: CueLine): Future[Seq[CueLine]] = ???
+  override def addCueLine(sceneId: String, cl: CueLine): Future[Seq[CueLine]] = ???
 
-  override def setCueLines(sceneId: SceneId, newLines: Lines): Future[Seq[CueLine]] = ???
+  override def setCueLines(sceneId: String, newLines: Lines): Future[Seq[CueLine]] = ???
 
   override def saveCueLine(cl: CueLine): Future[Seq[CueLine]] = ???
 
-  override def loadCueLines(sceneId: SceneId): Future[Seq[CueLine]] = ???
+  override def loadCueLines(sceneId: String): Future[Seq[CueLine]] = ???
 
   override def loadScenes(user: User): Future[Seq[Scene]] = ???
 
-  override def renameScene(sceneId: SceneId, newName: String): Future[Scene] = ???
+  override def renameScene(sceneId: String, newName: String): Future[Scene] = ???
 
-  override def addScene(user: User, sceneName: String): Future[Seq[Scene]] = {
+  override def addScene(user: User, sceneName: String): Future[Seq[db.Scene]] = {
     val sceneId = UUID.randomUUID().toString
     dbConfig.db.run(DBIO.seq(
-      DbData.scenes += (sceneId, sceneName, user.id)
+      DbData.scenes += db.Scene(sceneId, sceneName, user.id)
     )).flatMap( u =>
-      dbConfig.db.run(DbData.findUserScenes(user.id).result).map{ tupleSeq =>
-        tupleSeq.map{
-          case (a, b, c) => Scene(SceneId(a), b)
-        }
-      }
+      dbConfig.db.run(DbData.findUserScenes(user.id).result)
     )
   }
 
 
-  override def addOrFindUser(email: String): Future[User] = {
+  override def addOrFindUser(email: String): Future[db.User] = {
     dbConfig.db.run(DbData.findUserByEmail(email).result.headOption)
-      .map{
-        case Some((id, emailAddress, _)) => User(id, UserEmail(emailAddress))
-        case _ => DbData.createUser(email)
-      }
+      .map(_.getOrElse(DbData.createUser(email)))
   }
 
   def createDb(): Unit = {

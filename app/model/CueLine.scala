@@ -2,6 +2,8 @@ package model
 
 import java.util.UUID
 
+import db.DbData
+
 case class SceneId(id: String)
 object SceneId { def create() = SceneId(UUID.randomUUID().toString) }
 
