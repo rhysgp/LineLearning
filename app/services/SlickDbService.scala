@@ -4,16 +4,12 @@ import java.util.UUID
 import javax.inject.Inject
 
 import com.google.inject.ImplementedBy
+import db._
 import model.Lines
-import play.api.Play
 import play.api.db.slick.DatabaseConfigProvider
-import slick.backend.DatabaseConfig
 import slick.driver.JdbcProfile
 
 import scala.concurrent.Future
-import scala.util.Try
-
-import db._
 
 @ImplementedBy(classOf[SlickDbService])
 trait DbServiceAsync {
@@ -40,6 +36,7 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
   val dbConfig = dbConfigProvider.get[JdbcProfile]
 
   import dbConfig.driver.api._
+
   import scala.concurrent.ExecutionContext.Implicits.global
 
   override def scene(sceneId: String): Future[Scene] = ???

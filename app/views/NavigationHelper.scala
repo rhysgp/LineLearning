@@ -1,11 +1,12 @@
 package views
 
 import controllers.routes
-import model.{Scene, Navigation, NavItem, User}
+import model.{NavItem,Navigation}
+import db._
 
 object NavigationHelper {
 
-  private val home = NavItem("Home", routes.Application.index)
+  private val home = NavItem("Home", routes.Application.index())
 
   def noNavigation = Navigation(None, Seq(home))
 
@@ -14,7 +15,7 @@ object NavigationHelper {
       userOpt,
       Seq(
         Option(home),
-        if (showSceneNav) Option(NavItem("Scenes", routes.ScenesController.list)) else None,
+        if (showSceneNav) Option(NavItem("Scenes", routes.ScenesController.list())) else None,
         sceneName.map(sn => NavItem(sn.name, routes.PromptController.list(sn.toString)))
       ).flatten
     )

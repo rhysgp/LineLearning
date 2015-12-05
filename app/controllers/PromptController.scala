@@ -1,44 +1,45 @@
 package controllers
 
+import java.util.UUID
+import javax.inject.Inject
+
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
 import db._
 import db.Conversions._
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc._
-import services.DbService
+import services.{DbServiceAsync, DbService}
 import support.CookieHelper._
 import views.NavigationHelper._
 
+import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class PromptController(dbService: DbService) extends Controller {
+class PromptController @Inject() (dbService: DbServiceAsync) extends Controller {
 
-  def line(sceneId: String, index: Int) = Action { implicit request =>
+  def line(sceneId: String, index: Int) = Action.async { implicit request =>
     request.cookies.get(COOKIE_NAME) match {
 
       case Some(cookie) =>
         val user: User = cookie.value
 
-        dbService.loadCueLines(sceneId) match {
-          case Success(lines) =>
+        dbService.loadCueLines(sceneId)
+          .map{ lines =>
             if (index >= 0 && index < lines.length) {
               val cueLine = lines(index)
-              dbService.scene(sceneId) match {
-                case Success(scene) =>
-                  Ok(views.html.prompt(buildNavigation(Option(user)), scene, index, cueLine.cue, cueLine.line))
-                case Failure(t) =>
-                  Ok(t.getMessage)
+
+              dbService.scene(sceneId).map { scene =>
+                Ok(views.html.prompt(buildNavigation(Option(user)), scene, index, cueLine.cue, cueLine.line))
               }
             } else {
               Redirect(routes.PromptController.line(sceneId, 0))
             }
-
-          case Failure(t) =>
-            Ok("Failed to load cue lines...")
-        }
+          }
 
       case None =>
-        Redirect(routes.UserController.register())
+        Future(Redirect(routes.UserController.register()))
     }
   }
 
@@ -46,7 +47,7 @@ class PromptController(dbService: DbService) extends Controller {
     request.cookies.get(COOKIE_NAME) match {
 
       case Some(cookie) =>
-        val user = User.fromString(cookie.value)
+        val user: User = cookie.value
         dbService.scene(sceneId) match {
           case Success(scene) =>
             dbService.loadCueLines(sceneId) match {
@@ -73,7 +74,7 @@ class PromptController(dbService: DbService) extends Controller {
 
       case Some(cookie) =>
 
-        val user = User.fromString(cookie.value)
+        val user: User = cookie.value
 
         dbService.loadCueLines(sceneId) match {
           case Success(lines) =>
@@ -94,7 +95,7 @@ class PromptController(dbService: DbService) extends Controller {
 
       case Some(cookie) =>
 
-        val user = User.fromString(cookie.value)
+        val user: User = cookie.value
 
         addForm.bindFromRequest()(request).fold(
           formWithErrors => {
@@ -115,7 +116,7 @@ class PromptController(dbService: DbService) extends Controller {
                         .flashing("failed" -> t.getMessage)
                   }
                 } else {
-                  dbService.addCueLine(scene.id, CueLine(CueLineId.create(), formData.cue, formData.line)) match {
+                  dbService.addCueLine(scene.id, CueLine(UUID.randomUUID().toString, formData.cue, formData.line)) match {
                     case Success(lines) =>
                       Redirect(routes.PromptController.list(scene.toString))
 
@@ -138,12 +139,12 @@ class PromptController(dbService: DbService) extends Controller {
   def delete() = Action { request =>
     deleteForm.bindFromRequest()(request).fold(
       formWithErrors => {
-        Redirect(routes.ScenesController.list)
+        Redirect(routes.ScenesController.list())
           .flashing("failed" -> "Delete failed")
       },
       formData => {
-        val sceneId = SceneId(formData.sceneId)
-        dbService.removeCueLine(sceneId, CueLineId(formData.cueLineId)) match {
+        val sceneId = formData.sceneId
+        dbService.removeCueLine(sceneId, formData.cueLineId) match {
           case Success(_) =>
             Redirect(routes.PromptController.list(formData.sceneId))
           case Failure(t) =>

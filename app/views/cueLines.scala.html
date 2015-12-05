@@ -1,4 +1,5 @@
-@import model.{CueLine, Navigation, Scene}
+@import model.Navigation
+@import db._
 @(navigation: Navigation, scene: Scene, cueLines: Seq[CueLine], cueLineForm: Form[AddCueLine])
 @main("List", navigation) {
     <div class="container">
@@ -17,8 +18,8 @@
                         <td>@cueLine.cue</td>
                         <td>@cueLine.line</td>
                         <td>
-                            <button class="btn btn-sm btn-default" data-cuelineid="@cueLine.cueLineId.id" data-cue="@cueLine.cue" data-line="@cueLine.line">Edit...</button>
-                            <button class="btn btn-sm btn-default deleteCueLine" data-cuelineid="@cueLine.cueLineId.id">Delete...</button>
+                            <button class="btn btn-sm btn-default" data-cuelineid="@cueLine.id" data-cue="@cueLine.cue" data-line="@cueLine.line">Edit...</button>
+                            <button class="btn btn-sm btn-default deleteCueLine" data-cuelineid="@cueLine.id">Delete...</button>
                         </td>
                     </tr>
                 }
@@ -27,7 +28,7 @@
         </div>
         <div>
             <button class="btn btn-primary" id="addCueLineButton">Add...</button>
-            <a class="btn btn-default" id="runButton" href="@routes.PromptController.line(scene.id.id, 0)">Run...</a>
+            <a class="btn btn-default" id="runButton" href="@routes.PromptController.line(scene.id, 0)">Run...</a>
         </div>
     </div>
 

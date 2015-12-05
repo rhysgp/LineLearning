@@ -1,4 +1,5 @@
-@import model.{CueLine, Navigation}
+@import model.Navigation
+@import db.CueLine
 @(navigation: Navigation, form: Form[AddCueLine], lines: Seq[CueLine])
 @main("Add cue / line", navigation) {
     <div class="container">

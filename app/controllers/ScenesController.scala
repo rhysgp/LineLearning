@@ -1,18 +1,19 @@
 package controllers
 
-import model.{SceneId, User}
+import db.User
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc.{Action, _}
-import services.{AlreadyExistsException, DbService, NoSuchUserException}
+import services.{DbService, AlreadyExistsException, NoSuchUserException}
 import support.CookieHelper
 import support.CookieHelper._
+import db.Conversions._
 import views.NavigationHelper._
 
 import scala.util.{Failure, Success}
 
 
-class ScenesController extends Controller {
+class ScenesController(dbService: DbService) extends Controller {
 
   def list() = Action { implicit request =>
 
@@ -20,9 +21,9 @@ class ScenesController extends Controller {
 
       case Some(cookie) =>
 
-        val user = User.fromString(cookie.value)
+        val user: User = cookie.value
 
-        DbService.loadScenes(user) match {
+        dbService.loadScenes(user) match {
 
           case Success(scenes) =>
             Ok(views.html.scenes(buildNavigation(Option(user)), scenes, sceneForm))
@@ -46,14 +47,14 @@ class ScenesController extends Controller {
     request.cookies.get(COOKIE_NAME) match {
 
       case Some(cookie) =>
-        val user = User.fromString(cookie.value)
+        val user: User = cookie.value
 
         sceneForm.bindFromRequest.fold(
           formWithErrors => {
             BadRequest(views.html.scenes(buildNavigation(Option(user)), loadScenes(user), formWithErrors))
           },
           sceneData => {
-            DbService.addScene(user, sceneData.sceneName) match {
+            dbService.addScene(user, sceneData.sceneName) match {
               case Success(_) =>
                 Redirect(routes.ScenesController.list())
               case Failure(t) if t.isInstanceOf[AlreadyExistsException] =>
@@ -74,23 +75,18 @@ class ScenesController extends Controller {
 
       case Some(cookie) =>
 
-        val user = User.fromString(cookie.value)
+        val user: User = cookie.value
 
         deleteSceneForm.bindFromRequest.fold(
           formWithErrors => {
             BadRequest(views.html.scenes(buildNavigation(Option(user)), loadScenes(user), sceneForm))
           },
           deleteSceneData => {
-            val user = User.fromString(cookie.value)
+            val user: User = cookie.value
 
-            DbService.removeScene(SceneId(deleteSceneData.sceneId)) match {
-
-              case Success(scenes) =>
-                Redirect(routes.ScenesController.list)
-
-              case Failure(t) =>
-                BadRequest(views.html.error(buildNavigation(Option(user)), t))
-
+            dbService.removeScene(deleteSceneData.sceneId) match {
+              case Success(scenes) => Redirect(routes.ScenesController.list())
+              case Failure(t) => BadRequest(views.html.error(buildNavigation(Option(user)), t))
             }
 
           }
@@ -102,7 +98,7 @@ class ScenesController extends Controller {
   }
 
   private def loadScenes(user: User) =
-    DbService.loadScenes(user) match {
+    dbService.loadScenes(user) match {
       case Success(s) => s
       case Failure(t) => Seq()
     }

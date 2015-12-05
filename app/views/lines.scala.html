@@ -1,4 +1,5 @@
-@import model.{CueLine, Navigation}
+@import model.Navigation
+@import db.CueLine
 @(navigation: Navigation, lines: Seq[CueLine])
 @main("Lines", navigation) {
     <div class="container">
@@ -9,7 +10,7 @@
                 {lines:[
                 @for(cl <- lines) {
                     {
-                        "id":"@cl.cueLineId"
+                        "id":"@cl.id"
                         "cue":"@cl.cue",
                         "line":"@cl.line"
                     }
