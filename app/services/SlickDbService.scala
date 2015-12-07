@@ -17,7 +17,7 @@ trait DbServiceAsync {
   def scene(sceneId: String): Future[Scene]
   def loadScenes(user: User): Future[Seq[Scene]]
   def addScene(user: User, sceneName: String): Future[Seq[Scene]]
-  def removeScene(sceneId: String): Future[Scene]
+  def removeScene(user: User, sceneId: String): Future[Scene]
   def renameScene(sceneId: String, newName: String): Future[Scene]
 
   def loadCueLines(sceneId: String): Future[Seq[CueLine]]
@@ -43,7 +43,7 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
 
   override def removeCueLine(sceneId: String, cueLineId: String): Future[Seq[CueLine]] = ???
 
-  override def removeScene(sceneId: String): Future[Scene] = ???
+  override def removeScene(user: User, sceneId: String): Future[Scene] = ???
 
   override def addCueLine(sceneId: String, cl: CueLine): Future[Seq[CueLine]] = ???
 

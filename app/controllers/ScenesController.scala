@@ -1,48 +1,39 @@
 package controllers
 
+import javax.inject.Inject
+
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
+import db.Conversions._
 import db.User
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc.{Action, _}
-import services.{DbService, AlreadyExistsException, NoSuchUserException}
-import support.CookieHelper
+import services.DbServiceAsync
 import support.CookieHelper._
-import db.Conversions._
 import views.NavigationHelper._
 
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
 
 
-class ScenesController(dbService: DbService) extends Controller {
+class ScenesController @Inject() (dbService: DbServiceAsync) extends Controller {
 
-  def list() = Action { implicit request =>
-
+  def list() = Action.async { implicit request =>
     request.cookies.get(COOKIE_NAME) match {
-
       case Some(cookie) =>
-
         val user: User = cookie.value
-
-        dbService.loadScenes(user) match {
-
-          case Success(scenes) =>
-            Ok(views.html.scenes(buildNavigation(Option(user)), scenes, sceneForm))
-
-          case Failure(t) if t.isInstanceOf[NoSuchUserException] =>
-            BadRequest(views.html.error(buildNavigation(Option(user)), t))
-              .discardingCookies(DiscardingCookie(CookieHelper.COOKIE_NAME))
-
-          case Failure(t) =>
-            BadRequest(views.html.error(buildNavigation(Option(user)), t))
-
+        dbService.loadScenes(user).map{ scenes =>
+          Ok(views.html.scenes(buildNavigation(Option(user)), scenes, sceneForm))
+        } recover {
+          case t =>
+            Redirect(routes.UserController.register()).flashing("failure" -> t.getMessage)
         }
-
       case None =>
-        Redirect(routes.UserController.register())
+        Future(Redirect(routes.UserController.register()))
     }
   }
 
-  def addScene() = Action { implicit request =>
+  def addScene() = Action.async { implicit request =>
 
     request.cookies.get(COOKIE_NAME) match {
 
@@ -51,57 +42,37 @@ class ScenesController(dbService: DbService) extends Controller {
 
         sceneForm.bindFromRequest.fold(
           formWithErrors => {
-            BadRequest(views.html.scenes(buildNavigation(Option(user)), loadScenes(user), formWithErrors))
+            Future(Redirect(routes.ScenesController.list())
+              .flashing("failure" -> formWithErrors.errors.mkString(". ")))
           },
           sceneData => {
-            dbService.addScene(user, sceneData.sceneName) match {
-              case Success(_) =>
-                Redirect(routes.ScenesController.list())
-              case Failure(t) if t.isInstanceOf[AlreadyExistsException] =>
-                Redirect(routes.ScenesController.list()).flashing("error" -> t.getMessage)
-              case Failure(t) =>
-                InternalServerError(views.html.error(buildNavigation(Option(user)), t))
-            }
+            dbService.addScene(user, sceneData.sceneName).map(scenes => Redirect(routes.ScenesController.list()))
           }
         )
 
       case None =>
-        Redirect(routes.UserController.register())
+        Future(Redirect(routes.UserController.register()))
     }
   }
 
-  def delete = Action { implicit request =>
+  def delete() = Action.async { implicit request =>
     request.cookies.get(COOKIE_NAME) match {
-
       case Some(cookie) =>
-
         val user: User = cookie.value
-
         deleteSceneForm.bindFromRequest.fold(
           formWithErrors => {
-            BadRequest(views.html.scenes(buildNavigation(Option(user)), loadScenes(user), sceneForm))
+            Future(Redirect(routes.ScenesController.list())
+              .flashing("failure" -> formWithErrors.errors.mkString(". ")))
           },
           deleteSceneData => {
-            val user: User = cookie.value
-
-            dbService.removeScene(deleteSceneData.sceneId) match {
-              case Success(scenes) => Redirect(routes.ScenesController.list())
-              case Failure(t) => BadRequest(views.html.error(buildNavigation(Option(user)), t))
-            }
-
+            dbService.removeScene(user, deleteSceneData.sceneId)
+              .map(scene => Redirect(routes.ScenesController.list()))
           }
         )
-
       case None =>
-        Redirect(routes.UserController.register())
+        Future(Redirect(routes.UserController.register()))
     }
   }
-
-  private def loadScenes(user: User) =
-    dbService.loadScenes(user) match {
-      case Success(s) => s
-      case Failure(t) => Seq()
-    }
 
   val sceneForm = Form(
     mapping(
