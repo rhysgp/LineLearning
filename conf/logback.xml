@@ -14,6 +14,8 @@
   -->
   <logger name="play" level="INFO" />
   <logger name="application" level="DEBUG" />
+  <logger name="slick" level="ERROR" />
+  <logger name="slick.backend" level="DEBUG" />
 
   <root level="ERROR">
     <appender-ref ref="STDOUT" />

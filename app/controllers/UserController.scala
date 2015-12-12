@@ -1,16 +1,16 @@
 package controllers
 
 import javax.inject.Inject
-import play.api.data._
+
+import play.api.Logger
 import play.api.data.Forms._
-import play.api.i18n.{MessagesApi, I18nSupport}
+import play.api.data._
+import play.api.i18n.{I18nSupport, MessagesApi}
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import services.DbServiceAsync
 import support.CookieHelper
-
 import views.NavigationHelper._
-
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import scala.concurrent.Future
 
@@ -39,7 +39,9 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
               .withCookies(Cookie(CookieHelper.COOKIE_NAME, user.toString))
           }
           .recover {
-            case e: Exception => Redirect(routes.UserController.index()).flashing("failure" -> e.getMessage)
+            case e: Exception =>
+              Logger.error(e.getMessage, e)
+              Redirect(routes.UserController.index()).flashing("failure" -> e.getMessage)
           }
       }
     )

@@ -1,7 +1,7 @@
 package services
 
 import java.util.UUID
-import javax.inject.Inject
+import javax.inject.{Singleton, Inject}
 
 import com.google.inject.ImplementedBy
 import db._
@@ -16,7 +16,7 @@ trait DbServiceAsync {
 
   def scene(sceneId: String): Future[Scene]
   def loadScenes(user: User): Future[Seq[Scene]]
-  def addScene(user: User, sceneName: String): Future[Seq[Scene]]
+  def addScene(user: User, sceneName: String): Future[Unit]
   def removeScene(user: User, sceneId: String): Future[Scene]
   def renameScene(sceneId: String, newName: String): Future[Scene]
 
@@ -30,7 +30,14 @@ trait DbServiceAsync {
   def addOrFindUser(email: String): Future[User]
 }
 
+class SceneNotFoundException(val sceneName: Scene) extends Exception
+class AlreadyExistsException(msg: String) extends Exception(msg)
+class NoSuchSceneException(sceneId: String) extends Exception(s"Scene '$sceneId' doesn't exist.")
+class NoSuchUserException(email: String) extends Exception(s"$email is not registered.")
+class NoSuchCueLineException extends Exception
 
+
+@Singleton
 class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extends DbServiceAsync {
 
   val dbConfig = dbConfigProvider.get[JdbcProfile]
@@ -38,6 +45,8 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
   import dbConfig.driver.api._
 
   import scala.concurrent.ExecutionContext.Implicits.global
+
+  @volatile var created = false
 
   override def scene(sceneId: String): Future[Scene] = ???
 
@@ -53,26 +62,58 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
 
   override def loadCueLines(sceneId: String): Future[Seq[CueLine]] = ???
 
-  override def loadScenes(user: User): Future[Seq[Scene]] = ???
+  override def loadScenes(user: User): Future[Seq[Scene]] = {
+
+
+    dbConfig.db.run(DbData.users.result).map(results => {
+      println("---- users ----")
+      results.map(user => s"${user.id} --> ${user.email}")
+      println("---------------")
+    })
+
+
+    dbConfig.db.run(DbData.userExists(user.id).result)
+      .flatMap{ exists =>
+        if (!exists) throw new NoSuchUserException(user.email)
+        dbConfig.db.run(DbData.findUserScenes(user.id).result)
+      }
+  }
 
   override def renameScene(sceneId: String, newName: String): Future[Scene] = ???
 
-  override def addScene(user: User, sceneName: String): Future[Seq[db.Scene]] = {
+  override def addScene(user: User, sceneName: String): Future[Unit] = {
+
     val sceneId = UUID.randomUUID().toString
-    dbConfig.db.run(DBIO.seq(
+
+    println(s"====---> Inserting ($sceneId, $sceneName, ${user.id})")
+
+    dbConfig.db.run(
       DbData.scenes += db.Scene(sceneId, sceneName, user.id)
-    )).flatMap( u =>
-      dbConfig.db.run(DbData.findUserScenes(user.id).result)
-    )
+    ).map(_ => Unit)
   }
 
-
   override def addOrFindUser(email: String): Future[db.User] = {
-    dbConfig.db.run(DbData.findUserByEmail(email).result.headOption)
-      .map(_.getOrElse(DbData.createUser(email)))
+
+    if (!created) {
+      createDb()
+      created = true
+    }
+
+    dbConfig.db.run(
+      DbData.findUserByEmail(email).result
+        .map(q => DbData.createUser(email))
+    )
+
+    dbConfig.db.run(
+      DbData.createUser(email)
+        .andThen(DbData.findUserByEmail(email).result.head)
+    )
+
+//    Future(User("", "", ""))
   }
 
   def createDb(): Unit = {
+    println("***** createDb() *****")
     dbConfig.db.run(DBIO.seq(DbData.schemaCreate))
   }
 

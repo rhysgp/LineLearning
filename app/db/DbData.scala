@@ -3,11 +3,8 @@ package db
 
 import java.util.UUID
 
-//import model.{UserEmail, User}
+import db.DbData._
 import slick.driver.H2Driver.api._
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import DbData._
 
 
 
@@ -16,6 +13,9 @@ object DbData {
   val scenes = TableQuery[Scenes]
   val cueLines = TableQuery[CueLines]
 
+  def userExists(userId: String) =  users.filter(_.id === userId).exists
+
+  val findUserById = DbData.users.findBy(_.id)
   val findUserByEmail = DbData.users.findBy(_.email)
   val findSceneById = DbData.scenes.findBy(_.id)
   val findUserScenes = DbData.scenes.findBy(_.userId)
@@ -23,14 +23,10 @@ object DbData {
   def createUser(emailAddress: String) = {
     val guid = UUID.randomUUID().toString
     DbData.users += db.User(guid, emailAddress, "password")
-    User(guid, emailAddress, "")
   }
 
   def schemaCreate = (users.schema ++ scenes.schema ++ cueLines.schema).create
 
-  def addScene(user: User, sceneName: String) = {
-
-  }
 }
 
 case class User(id: String, email: String, password: String) {
@@ -41,6 +37,7 @@ class Users(tag: Tag) extends Table[User](tag, "user") {
   def id = column[String]("id", O.PrimaryKey)
   def email = column[String]("email")
   def password = column[String]("password")
+  def emailUniqueIdx = index("email_unique_index", email, unique = true)
 
   def * = (id, email, password) <> (db.User.tupled, db.User.unapply)
 }
@@ -51,24 +48,24 @@ class Scenes(tag: Tag) extends Table[Scene](tag, "scene") {
   def id = column[String]("id", O.PrimaryKey)
   def name = column[String]("name")
   def userId = column[String]("user_id")
-
-  // foreign key to user table:
-  def user = foreignKey("user_fk", userId, users)(_.id)
+  def userFk = foreignKey("user_fk", userId, users)(_.id)
+  def nameUserIdIdx = index("name_user_index", (name, userId), unique = true)
 
   def * = (id, name, userId) <> (db.Scene.tupled, db.Scene.unapply)
 }
 
-case class CueLine(id: String, cue: String, line: String)
-//object CueLine {
-//  def apply(cue: String, line: String): CueLine = CueLine(UUID.randomUUID().toString, cue, line)
-//}
+case class CueLine(id: String, cue: String, line: String, order: Int)
 
 class CueLines(tag: Tag) extends Table[CueLine](tag, "cue_line") {
   def id = column[String]("id", O.PrimaryKey)
   def cue = column[String]("cue")
   def line = column[String]("line")
+  def order = column[Int]("order")
+  def sceneId = column[String]("scene_id")
+  def sceneFk = foreignKey("scene_fk", sceneId, scenes)(_.id)
+  def sceneOrderIdx = index("scene_id_order_index", (sceneId, order), unique = true)
 
-  def * = (id, cue, line) <> (db.CueLine.tupled, db.CueLine.unapply)
+  def * = (id, cue, line, order) <> (db.CueLine.tupled, db.CueLine.unapply)
 }
 
 
