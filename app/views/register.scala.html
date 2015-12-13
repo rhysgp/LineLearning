@@ -2,13 +2,7 @@
 @(navigation: Navigation, form: Form[Register])(implicit flash: Flash, messages: Messages)
 @main("Register", navigation) {
 
-    @flash.get("failure").map{msg =>
-      <p class="failure">@msg</p>
-    }
-
-    @flash.get("success").map{msg =>
-      <p class="success">@msg</p>
-    }
+    @flashMessages(flash)
 
     <div class="container">
         <div id="inputPrompt">
@@ -19,7 +13,7 @@
                         <div class="@formGroupClass">
 
                             <label for="@field.name" class="control-label">Please enter your email address to register:</label>
-                            <input name="@field.name" type="text" class="form-control" placeholder="email@@address.please" value="@field.value.getOrElse("")" autofocus="true" />
+                            <input name="@field.name" type="text" class="form-control" placeholder="email@@address.please" value="@field.value.getOrElse("")" autofocus />
 
                             @if(field.hasErrors) {
                                 @for(err <- field.errors) {

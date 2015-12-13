@@ -2,13 +2,7 @@
 @(navigation: Navigation, scenes: Seq[db.Scene], sceneForm: Form[SceneFormData])(implicit flash: Flash)
 @main("Scenes", navigation) {
 
-    @flash.get("failure").map{msg =>
-        <p class="failure">@msg</p>
-    }
-
-    @flash.get("success").map{msg =>
-        <p class="success">@msg</p>
-    }
+    @flashMessages(flash)
 
     <div class="container">
         <div class="table-responsive">

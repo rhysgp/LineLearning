@@ -1,7 +1,7 @@
 package services
 
 import java.util.UUID
-import javax.inject.{Singleton, Inject}
+import javax.inject.{Inject, Singleton}
 
 import com.google.inject.ImplementedBy
 import db._
@@ -99,22 +99,26 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
       created = true
     }
 
-    dbConfig.db.run(
-      DbData.findUserByEmail(email).result
-        .map(q => DbData.createUser(email))
-    )
+    /*
+     * The following, I think, isn't necessarily done in one transaction.
+     * I need to work out how to set the transaction boundaries for this
+     * kind of thing.
+     */
 
-    dbConfig.db.run(
-      DbData.createUser(email)
-        .andThen(DbData.findUserByEmail(email).result.head)
-    )
-
-//    Future(User("", "", ""))
+    dbConfig.db.run(DbData.findUserByEmail(email).result.headOption)
+      .flatMap{
+        case Some(user: User) =>
+          Future(user)
+        case None =>
+          val userId = UUID.randomUUID().toString
+          val user = User(userId, email, "password")
+          dbConfig.db.run(DbData.createUser(user))
+            .map(x => user)
+      }
   }
 
   def createDb(): Unit = {
     println("***** createDb() *****")
     dbConfig.db.run(DBIO.seq(DbData.schemaCreate))
   }
-
 }

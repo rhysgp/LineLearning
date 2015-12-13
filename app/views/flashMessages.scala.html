@@ -1,0 +1,9 @@
+@(flash: Flash)
+@flash.get("failure").map{msg =>
+    <p class="flash-failure">@msg</p>
+}
+
+@flash.get("success").map{msg =>
+    <p class="flashs-success">@msg</p>
+}
+

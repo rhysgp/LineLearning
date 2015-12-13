@@ -15,14 +15,15 @@ object DbData {
 
   def userExists(userId: String) =  users.filter(_.id === userId).exists
 
+//  def userWithEmailExists(email: String) = users.filter(_.email == email).exists
+
   val findUserById = DbData.users.findBy(_.id)
   val findUserByEmail = DbData.users.findBy(_.email)
   val findSceneById = DbData.scenes.findBy(_.id)
   val findUserScenes = DbData.scenes.findBy(_.userId)
 
-  def createUser(emailAddress: String) = {
-    val guid = UUID.randomUUID().toString
-    DbData.users += db.User(guid, emailAddress, "password")
+  def createUser(user: db.User) = {
+    DbData.users += user
   }
 
   def schemaCreate = (users.schema ++ scenes.schema ++ cueLines.schema).create
