@@ -92,13 +92,13 @@ class PromptController @Inject() (dbService: DbServiceAsync) extends Controller 
 
             dbService.scene(formData.sceneId).flatMap { scene =>
               if (formData.cueLineId.length > 0) {
-                val modifiedCl = CueLine(formData.cueLineId, formData.cue, formData.line, 0)
+                val modifiedCl = CueLine(formData.cueLineId, formData.cue, formData.line, 0, formData.sceneId)
                 dbService.saveCueLine(modifiedCl).map { lines =>
                   Redirect(routes.PromptController.list(scene.toString))
                 }
               } else {
-                val newCl = CueLine(UUID.randomUUID().toString, formData.cue, formData.line, 0)
-                dbService.addCueLine(scene.id, newCl).map{ lines =>
+                val newCl = CueLine(UUID.randomUUID().toString, formData.cue, formData.line, 0, formData.sceneId)
+                dbService.addCueLine(scene.id, newCl).map{ b =>
                   Redirect(routes.PromptController.list(scene.toString))
                 }
               }
@@ -119,8 +119,17 @@ class PromptController @Inject() (dbService: DbServiceAsync) extends Controller 
       },
       formData => {
         val sceneId = formData.sceneId
-        dbService.removeCueLine(sceneId, formData.cueLineId).map { lines =>
+        dbService.removeCueLine(sceneId, formData.cueLineId).map( removed =>
+          if (removed) {
             Redirect(routes.PromptController.list(formData.sceneId))
+          } else {
+            Redirect(routes.PromptController.list(formData.sceneId))
+              .flashing("falure" -> "Failed to delete cue line (couldn't find it in the database)")
+          }
+        ) recover {
+          case t =>
+            Redirect(routes.PromptController.list(formData.sceneId))
+              .flashing("falure" -> t.getMessage)
         }
       }
     )

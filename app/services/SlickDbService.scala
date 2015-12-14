@@ -6,6 +6,7 @@ import javax.inject.{Inject, Singleton}
 import com.google.inject.ImplementedBy
 import db._
 import model.Lines
+import play.api.Logger
 import play.api.db.slick.DatabaseConfigProvider
 import slick.driver.JdbcProfile
 
@@ -17,12 +18,12 @@ trait DbServiceAsync {
   def scene(sceneId: String): Future[Scene]
   def loadScenes(user: User): Future[Seq[Scene]]
   def addScene(user: User, sceneName: String): Future[Unit]
-  def removeScene(user: User, sceneId: String): Future[Scene]
+  def removeScene(user: User, sceneId: String): Future[Boolean]
   def renameScene(sceneId: String, newName: String): Future[Scene]
 
   def loadCueLines(sceneId: String): Future[Seq[CueLine]]
-  def addCueLine(sceneId: String, cl: CueLine): Future[Seq[CueLine]]
-  def removeCueLine(sceneId: String, cueLineId: String): Future[Seq[CueLine]]
+  def addCueLine(sceneId: String, cl: CueLine): Future[Boolean]
+  def removeCueLine(sceneId: String, cueLineId: String): Future[Boolean]
   def saveCueLine(cl: CueLine): Future[Seq[CueLine]]
 
   def setCueLines(sceneId: String, newLines: Lines): Future[Seq[CueLine]]
@@ -48,19 +49,36 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
 
   @volatile var created = false
 
-  override def scene(sceneId: String): Future[Scene] = ???
+  override def scene(sceneId: String): Future[Scene] = {
+    dbConfig.db.run(DbData.findSceneById(sceneId).result.head)
+  }
 
-  override def removeCueLine(sceneId: String, cueLineId: String): Future[Seq[CueLine]] = ???
+  override def removeCueLine(sceneId: String, cueLineId: String): Future[Boolean] = {
+    dbConfig.db.run(DbData.cueLines.filter(cl => cl.id === cueLineId).delete)
+      .map(delCount => {
+        if (delCount > 1) Logger.error(s"Deleted $delCount cue lines from scene $sceneId")
+        delCount > 0
+      })
+  }
 
-  override def removeScene(user: User, sceneId: String): Future[Scene] = ???
+  override def removeScene(user: User, sceneId: String): Future[Boolean] = {
+    dbConfig.db.run(DbData.scenes.filter(s => s.id === sceneId && s.userId === user.id).delete)
+      .map(delCount => {
+        if (delCount > 1) Logger.error(s"Deleted $delCount scenes! - expecting only one!")
+        delCount > 0
+      })
+  }
 
-  override def addCueLine(sceneId: String, cl: CueLine): Future[Seq[CueLine]] = ???
+  override def addCueLine(sceneId: String, cl: CueLine): Future[Boolean] = {
+    dbConfig.db.run(DbData.cueLines += cl).map(x => true)
+  }
 
   override def setCueLines(sceneId: String, newLines: Lines): Future[Seq[CueLine]] = ???
-
   override def saveCueLine(cl: CueLine): Future[Seq[CueLine]] = ???
 
-  override def loadCueLines(sceneId: String): Future[Seq[CueLine]] = ???
+  override def loadCueLines(sceneId: String): Future[Seq[CueLine]] = {
+    dbConfig.db.run(DbData.cueLines.filter(_.sceneId === sceneId).result)
+  }
 
   override def loadScenes(user: User): Future[Seq[Scene]] = {
 
@@ -79,7 +97,13 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
       }
   }
 
-  override def renameScene(sceneId: String, newName: String): Future[Scene] = ???
+  override def renameScene(sceneId: String, newName: String): Future[Scene] = {
+    dbConfig.db.run(DbData.scenes.filter(s => s.id === sceneId).map(_.name).update(newName))
+      .flatMap(updCount => {
+        if (updCount != 1) Logger.error(s"renameScene(): Expecting update count to be 1, but was $updCount")
+        dbConfig.db.run(DbData.scenes.filter(s => s.id === sceneId).result.head)
+      })
+  }
 
   override def addScene(user: User, sceneName: String): Future[Unit] = {
 

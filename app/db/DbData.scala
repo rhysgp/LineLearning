@@ -1,8 +1,6 @@
 package db
 
 
-import java.util.UUID
-
 import db.DbData._
 import slick.driver.H2Driver.api._
 
@@ -55,7 +53,7 @@ class Scenes(tag: Tag) extends Table[Scene](tag, "scene") {
   def * = (id, name, userId) <> (db.Scene.tupled, db.Scene.unapply)
 }
 
-case class CueLine(id: String, cue: String, line: String, order: Int)
+case class CueLine(id: String, cue: String, line: String, order: Int, sceneId: String)
 
 class CueLines(tag: Tag) extends Table[CueLine](tag, "cue_line") {
   def id = column[String]("id", O.PrimaryKey)
@@ -66,7 +64,7 @@ class CueLines(tag: Tag) extends Table[CueLine](tag, "cue_line") {
   def sceneFk = foreignKey("scene_fk", sceneId, scenes)(_.id)
   def sceneOrderIdx = index("scene_id_order_index", (sceneId, order), unique = true)
 
-  def * = (id, cue, line, order) <> (db.CueLine.tupled, db.CueLine.unapply)
+  def * = (id, cue, line, order, sceneId) <> (db.CueLine.tupled, db.CueLine.unapply)
 }
 
 
