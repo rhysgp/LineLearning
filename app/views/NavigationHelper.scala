@@ -16,7 +16,7 @@ object NavigationHelper {
       Seq(
         Option(home),
         if (showSceneNav) Option(NavItem("Scenes", routes.ScenesController.list())) else None,
-        sceneName.map(sn => NavItem(sn.name, routes.PromptController.list(sn.toString)))
+        sceneName.map(sn => NavItem(sn.name, routes.PromptController.list(sn.id)))
       ).flatten
     )
   }

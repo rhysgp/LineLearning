@@ -62,15 +62,27 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
   }
 
   override def removeScene(user: User, sceneId: String): Future[Boolean] = {
-    dbConfig.db.run(DbData.scenes.filter(s => s.id === sceneId && s.userId === user.id).delete)
-      .map(delCount => {
-        if (delCount > 1) Logger.error(s"Deleted $delCount scenes! - expecting only one!")
-        delCount > 0
-      })
+    dbConfig.db.run(
+      DbData.cueLines.filter(cl => cl.sceneId === sceneId).delete
+        .map(x => DbData.scenes.filter(s => s.id === sceneId && s.userId === user.id).delete)
+    )
+    .map(x => true)
+
+      // FIXME - need to figure out how to get the count out of the final delete
+
+//      .map(delCount => {
+//        if (delCount > 1) Logger.error(s"Deleted $delCount scenes! - expecting only one!")
+//        delCount > 0
+//      })
   }
 
   override def addCueLine(sceneId: String, cl: CueLine): Future[Boolean] = {
-    dbConfig.db.run(DbData.cueLines += cl).map(x => true)
+    dbConfig.db.run(DbData.cueLines.filter(cl => cl.sceneId === sceneId).result)
+      .flatMap(count => {
+        val clWithCount = cl.copy(order = count.length)
+        dbConfig.db.run(DbData.cueLines += clWithCount)
+      })
+      .map(x => true)
   }
 
   override def setCueLines(sceneId: String, newLines: Lines): Future[Seq[CueLine]] = ???

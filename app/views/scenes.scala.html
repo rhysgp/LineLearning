@@ -16,10 +16,10 @@
                 <tbody>
                 @for(scene <- scenes){
                     <tr>
-                        <td><a href="@routes.PromptController.list(scene.toString)">@scene.name</a></td>
+                        <td><a href="@routes.PromptController.list(scene.id)">@scene.name</a></td>
                         <td>
-                            <button id="deleteScene" class="btn btn-default btn-sm" role="button" data-scene="@scene.toString">Delete...</button>
-                            <a href="@routes.PromptController.line(scene.toString, 0)" class="btn btn-default btn-sm" role="button">Run</a>
+                            <button class="deleteScene btn btn-default btn-sm" role="button" data-scene="@scene.id">Delete...</button>
+                            <a href="@routes.PromptController.line(scene.id, 0)" class="btn btn-default btn-sm" role="button">Prompt</a>
                         </td>
                     </tr>
                 }
@@ -65,12 +65,11 @@
     <div id="deleteConfirmModal" class="modal fade">
         <div class="modal-dialog">
             <form method="post" action="@routes.ScenesController.delete" data-toggle="validator">
-                <input id="sceneStream_delete" name="sceneStream" type="hidden" value="" />
-                <input id="cueLineId_delete" name="cueLineId" type="hidden" />
+                <input id="sceneId_delete" name="sceneId" type="hidden" value="" />
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        <h4 class="modal-title">Delete Cue Line</h4>
+                        <h4 class="modal-title">Delete Scene</h4>
                     </div>
                     <div class="modal-body">
                         <div class="row">
@@ -95,8 +94,8 @@
               $('#sceneName').focus();
         });
 
-        $("#deleteScene").click(function(e) {
-            $("#sceneStream_delete").val($(e.target).data("scene"));
+        $(".deleteScene").click(function(e) {
+            $("#sceneId_delete").val($(e.target).data("scene"));
             $("#deleteConfirmModal").modal("show");
         });
     </script>

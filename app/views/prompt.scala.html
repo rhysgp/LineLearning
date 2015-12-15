@@ -112,14 +112,8 @@
       if (!$("#formGroup").hasClass("has-success") && $answer.hasClass("hidden")) {
         $answer.removeClass("hidden");
       } else {
-        var currentIndex = Number($("#inputPrompt").data("index"));
-        var nextIndex = currentIndex + 1;
-        var urlTemplate = "@routes.PromptController.line(scene.toString, 99999)";
-
-        window.location.href = urlTemplate.replace("99999", "" + nextIndex);
+        window.location.href = "@routes.PromptController.line(scene.id, index + 1)";
       }
-
-
     }
 
   </script>

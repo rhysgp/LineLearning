@@ -88,18 +88,18 @@ class PromptController @Inject() (dbService: DbServiceAsync) extends Controller 
           formWithErrors => {
             Future(Ok(formWithErrors.toString))
           },
-          formData => {
 
+          formData => {
             dbService.scene(formData.sceneId).flatMap { scene =>
               if (formData.cueLineId.length > 0) {
                 val modifiedCl = CueLine(formData.cueLineId, formData.cue, formData.line, 0, formData.sceneId)
                 dbService.saveCueLine(modifiedCl).map { lines =>
-                  Redirect(routes.PromptController.list(scene.toString))
+                  Redirect(routes.PromptController.list(scene.id))
                 }
               } else {
                 val newCl = CueLine(UUID.randomUUID().toString, formData.cue, formData.line, 0, formData.sceneId)
                 dbService.addCueLine(scene.id, newCl).map{ b =>
-                  Redirect(routes.PromptController.list(scene.toString))
+                  Redirect(routes.PromptController.list(scene.id))
                 }
               }
             }

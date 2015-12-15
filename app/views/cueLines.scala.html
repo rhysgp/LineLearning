@@ -45,7 +45,7 @@
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <input type="hidden" name="cueLineId" id="cueLineId" />
-                                    <input type="hidden" name="sceneId" value="@scene" />
+                                    <input type="hidden" name="sceneId" value="@scene.id" />
                                     <label for="prompt" class="sr-only">Cue</label>
                                     <textarea id="cue" name="cue" class="form-control" placeholder="Cue..."></textarea>
                                     <label for="line" class="sr-only">Line</label>
@@ -66,7 +66,7 @@
     <div id="deleteConfirmModal" class="modal fade">
         <div class="modal-dialog">
             <form method="post" action="@routes.PromptController.delete" data-toggle="validator">
-                <input id="sceneId_delete" name="sceneId" type="hidden" value="@scene.toString" />
+                <input id="sceneId_delete" name="sceneId" type="hidden" value="@scene.id" />
                 <input id="cueLineId_delete" name="cueLineId" type="hidden" />
                 <div class="modal-content">
                     <div class="modal-header">

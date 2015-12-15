@@ -92,7 +92,7 @@ class ScenesController @Inject() (dbService: DbServiceAsync) extends Controller 
 
   val deleteSceneForm = Form(
     mapping(
-      "sceneStream" -> nonEmptyText
+      "sceneId" -> nonEmptyText
     )(DeleteScene.apply)(DeleteScene.unapply)
   )
 }
