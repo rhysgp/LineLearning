@@ -18,7 +18,11 @@ object DbData {
   val findUserById = DbData.users.findBy(_.id)
   val findUserByEmail = DbData.users.findBy(_.email)
   val findSceneById = DbData.scenes.findBy(_.id)
-  val findUserScenes = DbData.scenes.findBy(_.userId)
+//  val findUserScenes = DbData.scenes.findBy(_.userId)
+
+  def findUserScenes(userId: String) = {
+    scenes.filter(s => s.userId === userId).sortBy(_.name)
+  }
 
   def createUser(user: db.User) = {
     DbData.users += user

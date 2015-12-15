@@ -62,11 +62,18 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
   }
 
   override def removeScene(user: User, sceneId: String): Future[Boolean] = {
-    dbConfig.db.run(
-      DbData.cueLines.filter(cl => cl.sceneId === sceneId).delete
-        .map(x => DbData.scenes.filter(s => s.id === sceneId && s.userId === user.id).delete)
-    )
-    .map(x => true)
+//    dbConfig.db.run(
+//      DbData.cueLines.filter(cl => cl.sceneId === sceneId).delete
+//        .map(x => DbData.scenes.filter(s => s.id === sceneId && s.userId === user.id).delete)
+//    )
+//    .map(x => true)
+
+    dbConfig.db.run(DBIO.seq(
+      DbData.cueLines.filter(cl => cl.sceneId === sceneId).delete,
+      DbData.scenes.filter(s => s.id === sceneId && s.userId === user.id).delete
+    ))
+
+    Future(true)
 
       // FIXME - need to figure out how to get the count out of the final delete
 

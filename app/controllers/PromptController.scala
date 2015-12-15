@@ -29,10 +29,16 @@ class PromptController @Inject() (dbService: DbServiceAsync) extends Controller 
               val cueLine = lines(index)
 
               dbService.scene(sceneId).map { scene =>
-                Ok(views.html.prompt(buildNavigation(Option(user)), scene, index, cueLine.cue, cueLine.line))
+                Ok(views.html.prompt(nav(Option(user), Option(scene)), scene, index, cueLine.cue, cueLine.line))
               }
             } else {
-              Future(Redirect(routes.PromptController.line(sceneId, 0)))
+              if (index == 0) {
+                Future(Redirect(routes.PromptController.list(sceneId)))
+              } else {
+                dbService.scene(sceneId).map { scene =>
+                  Ok(views.html.promptComplete(nav(Option(user), Option(scene)), scene))
+                }
+              }
             }
           }
 
@@ -40,6 +46,9 @@ class PromptController @Inject() (dbService: DbServiceAsync) extends Controller 
         Future(Redirect(routes.UserController.register()))
     }
   }
+
+  private def nav(userOpt: Option[User], sceneOpt: Option[Scene]) =
+    buildNavigation(userOpt, showSceneNav = true, sceneName = sceneOpt)
 
   def list(sceneId: String) = Action.async { implicit request =>
     request.cookies.get(COOKIE_NAME) match {
