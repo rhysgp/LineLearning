@@ -1,0 +1,4 @@
+@(action: String, id: String = "", className: String = "")(inc: Html)
+<form id="@{id}" method="post" action="@{action}" @{className}">
+    @inc
+</form>

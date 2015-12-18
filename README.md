@@ -19,6 +19,6 @@ TODO
  10. Add Google Analytics
  11. ~~Add slick for db access~~
  12. Add email click to register
- 13. Add login.
+ 13. ~~Add login.~~
  14. Add password changing.
  

@@ -2,6 +2,8 @@ package controllers
 
 import javax.inject.Inject
 
+import db.Conversions._
+import db.User
 import play.api.Logger
 import play.api.data.Forms._
 import play.api.data._
@@ -10,6 +12,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import services.DbServiceAsync
 import support.CookieHelper
+import support.CookieHelper._
 import views.NavigationHelper._
 
 import scala.concurrent.Future
@@ -47,11 +50,110 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
     )
   }
 
+  def login = Action {
+    Ok(views.html.login(loginForm, buildNavigation(None, showSceneNav = false)))
+      .withNewSession
+  }
+
+  def loginPost() = Action.async { implicit request =>
+
+    loginForm.bindFromRequest().fold(
+      formWithErrors =>
+        Future(Ok(views.html.login(formWithErrors, buildNavigation(None)))),
+
+      loginData =>
+        dbService.findUser(loginData.email, loginData. password)
+          .map(user => {
+            Redirect(routes.Application.index)
+              .withCookies(Cookie(CookieHelper.COOKIE_NAME, user.toString))
+          })
+          .recover{ case _ =>
+            val form = loginForm.fill(loginData.copy(password = ""))
+            Ok(views.html.login(form, buildNavigation(None), loginFailed = true))
+          }
+    )
+  }
+
+  def passwordChange = Action{ implicit request =>
+    request.cookies.get(COOKIE_NAME) match {
+
+      case Some(cookie) =>
+        val user: User = cookie.value
+        Ok(views.html.password(passwordChangeForm, buildNavigation(Option(user))))
+
+      case None =>
+        Redirect(routes.Application.index())
+    }
+  }
+
+  def passwordChangePost() = Action.async { implicit request =>
+
+    request.cookies.get(COOKIE_NAME) match {
+      case Some(cookie) =>
+        val user: User = cookie.value
+        passwordChangeForm.bindFromRequest().fold(
+          formWithErrors =>
+            Future(Ok(views.html.password(formWithErrors, buildNavigation(Option(user))))),
+          formData =>
+
+            // CHECK THAT THE TWO NEW PASSWORDS MATCH!!! - OR DO THIS IN THE UI!!!
+
+            // TODO - check to see if there's a way of validating this using the Form mapping
+
+            if (formData.newPassword != formData.reTypedNewPassword) {
+              val frm = passwordChangeForm.fill(formData).withError("retyped_new_password", "New passwords don't match")
+              Future(Ok(views.html.password(frm, buildNavigation(Option(user)))))
+            } else {
+              dbService.changePassword(user.email, formData.oldPassword, formData.newPassword)
+                .map(x => Redirect(routes.Application.index()))
+                .recover{ case t =>
+                  Logger.error(t.getMessage, t)
+                  Ok(views.html.password(passwordChangeForm, buildNavigation(Option(user)), failed = true))
+                }
+            }
+        )
+      case None =>
+        Future(Redirect(routes.Application.index()))
+    }
+  }
+
+
+//  val passwordCheckConstraint: Constraint[String] = Constraint("constraints.passwordcheck")({
+//    plainText =>
+//      val errors = plainText match {
+//        case allNumbers() => Seq(ValidationError("Password is all numbers"))
+//        case allLetters() => Seq(ValidationError("Password is all letters"))
+//        case _ => Nil
+//      }
+//      if (errors.isEmpty) {
+//        Valid
+//      } else {
+//        Invalid(errors)
+//      }
+//  })
+
   val registerForm = Form(
     mapping(
       "email" -> email
     )(Register.apply)(Register.unapply)
   )
+
+  val loginForm = Form(
+    mapping(
+      "email" -> email,
+      "password" -> nonEmptyText
+    )(Login.apply)(Login.unapply)
+  )
+
+  val passwordChangeForm = Form(
+    mapping(
+      "old_password" -> nonEmptyText,
+      "new_password" -> nonEmptyText(minLength = 6),
+      "retyped_new_password" -> nonEmptyText(minLength = 6)
+    )(PasswordChange.apply)(PasswordChange.unapply)//.verifying(pw => pw.newPassword == pw.oldPassword)
+  )
 }
 
 case class Register(email: String)
+case class Login(email: String, password: String)
+case class PasswordChange(oldPassword: String, newPassword: String, reTypedNewPassword: String)

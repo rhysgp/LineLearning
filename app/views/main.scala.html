@@ -13,30 +13,30 @@
         <script src="@routes.Assets.versioned("javascripts/hello.js")" type="text/javascript"></script>
     </head>
     <body>
-        @if(navigation.userOpt.nonEmpty) {
-            <header>
-                <nav class="navbar navbar-default">
-                    <div class="container-fluid">
-                        <div id="navbar" class="navbar-collapse collapse">
-                            <ul class="nav navbar-nav">
-                                @for(i <- 1 to navigation.items.size) {
-                                    @defining((i == navigation.items.size, navigation.items(i - 1))) { case(last, navItem) =>
-                                        @defining(if (last) "active" else "") { clazz =>
-                                            <li class="@clazz">
-                                                <a href="@navItem.link">@navItem.label</a>
-                                            </li>
-                                        }
+        <header>
+            <nav class="navbar navbar-default">
+                <div class="container-fluid">
+                    <div id="navbar" class="navbar-collapse collapse">
+                        <ul class="nav navbar-nav">
+                            @for(i <- 1 to navigation.items.size) {
+                                @defining((i == navigation.items.size, navigation.items(i - 1))) { case(last, navItem) =>
+                                    @defining(if (last) "active" else "") { clazz =>
+                                        <li class="@clazz">
+                                            <a href="@navItem.link">@navItem.label</a>
+                                        </li>
                                     }
                                 }
-                            </ul>
+                            }
+                        </ul>
+                        @if(navigation.userOpt.nonEmpty) {
                             <ul class="nav navbar-nav navbar-right">
-                                <li><a>@navigation.userOpt.map(u => u.email).getOrElse("")</a></li>
+                                <li><a href="@routes.UserController.passwordChange()" title="Click to change password">@navigation.userOpt.map(_.email).getOrElse("")</a></li>
                             </ul>
-                        </div>
+                        }
                     </div>
-                </nav>
-            </header>
-        }
+                </div>
+            </nav>
+        </header>
         @content
     </body>
 </html>

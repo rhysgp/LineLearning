@@ -1,0 +1,10 @@
+@(label: String, name: String, tpe: String = "text", id: Option[String] = None, className: String = "", error: Option[FormError] = None, autofocus: Boolean = false, placeholder: String = "")
+<div class="form-group @{className}">
+    <label class="control-label" for="@name">@label</label>
+    @defining(if (autofocus) "autofocus" else ""){ af =>
+        <input type="@{tpe}" class="form-control" name="@name" id="@id" aria-describedby="@{name}_helpBlock" @af placeholder="@placeholder">
+    }
+    @error.map{ formError =>
+        <span id="@{name}_helpBlock" class="help-block">@{formError.message}</span>
+    }.getOrElse("")
+</div>

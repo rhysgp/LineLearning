@@ -29,6 +29,10 @@ trait DbServiceAsync {
   def setCueLines(sceneId: String, newLines: Lines): Future[Seq[CueLine]]
 
   def addOrFindUser(email: String): Future[User]
+
+  def findUser(email: String, password: String): Future[User]
+
+  def changePassword(email: String, oldPassword: String, newPassword: String): Future[Unit]
 }
 
 class SceneNotFoundException(val sceneName: Scene) extends Exception
@@ -36,6 +40,7 @@ class AlreadyExistsException(msg: String) extends Exception(msg)
 class NoSuchSceneException(sceneId: String) extends Exception(s"Scene '$sceneId' doesn't exist.")
 class NoSuchUserException(email: String) extends Exception(s"$email is not registered.")
 class NoSuchCueLineException extends Exception
+class PasswordChangeException extends Exception
 
 
 @Singleton
@@ -158,6 +163,20 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
           dbConfig.db.run(DbData.createUser(user))
             .map(x => user)
       }
+  }
+
+  def findUser(email: String, password: String): Future[User] = {
+    dbConfig.db.run(
+      DbData.users.filter(user => user.email === email && user.password === password).result
+    ).map(_.head)
+  }
+
+  def changePassword(email: String, oldPassword: String, newPassword: String): Future[Unit] = {
+    dbConfig.db.run(
+      DbData.users.filter(user => user.email === email && user.password === oldPassword).map(_.password).update(newPassword)
+    ).map(updateCount => {
+      if (updateCount == 0) throw new PasswordChangeException()
+    })
   }
 
   def createDb(): Unit = {

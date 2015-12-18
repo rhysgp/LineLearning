@@ -3,6 +3,11 @@
 # ~~~~
 
 # Home page
+GET     /login                 controllers.UserController.login()
+POST    /login                 controllers.UserController.loginPost()
+GET     /passwordChange        controllers.UserController.passwordChange()
+POST    /passwordChange        controllers.UserController.passwordChangePost()
+
 GET     /                      controllers.Application.index
 GET     /list/:sceneId         controllers.PromptController.list(sceneId: String)
 #GET     /edit                      controllers.PromptController.edit()

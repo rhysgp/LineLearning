@@ -1,0 +1,16 @@
+@import model.Navigation
+@(form: Form[Login], navigation: Navigation, loginFailed: Boolean = false)
+@main("RhysSoft - Line Learning", navigation) {
+    <div class="container">
+        @if(loginFailed) {
+            <div class="error">Login failed</div>
+        }
+
+        @frm.form(routes.UserController.login().url) {
+            @frm.field("Email address", "email", error = form("email").error, autofocus = true, placeholder = "user@email.please")
+            @frm.field("Password", "password", tpe = "password", error = form("password").error, placeholder = "password")
+            <button type="submit" class="btn btn-primary">Login</button>
+            <a href="@routes.UserController.register()" class="pull-right">Register</a>
+        }
+    </div>
+}
