@@ -17,6 +17,8 @@ import views.NavigationHelper._
 
 import scala.concurrent.Future
 
+import services.mail._
+
 class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbServiceAsync) extends Controller with I18nSupport {
 
   def index() = Action { implicit request =>
@@ -24,35 +26,63 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
   }
 
   def register() = Action.async { implicit request =>
-    registerForm.bindFromRequest.fold(
-      formWithErrors =>
-        Future(BadRequest(views.html.register(noNavigation, formWithErrors))),
-      registerData   => {
 
-        // actually do the register:
+    request.cookies.get(COOKIE_NAME) match {
 
-        //  a) Could check email address existence and error if it doesn't exist
-        //  b) If email address OK, check to see if it is an existing user, and either:
-        //     i) Find the existing user's GUID and send them an email; OR
-        //    ii) Create a new user, generating the GUID, and send them an email
+      case Some(cookie) =>
+        Future(Redirect(routes.Application.index()))
 
-        dbService.addOrFindUser(registerData.email)
-          .map { user =>
-            Redirect(routes.ScenesController.list())
-              .withCookies(Cookie(CookieHelper.COOKIE_NAME, user.toString))
+      case None =>
+        registerForm.bindFromRequest.fold(
+          formWithErrors =>
+            Future(BadRequest(views.html.register(noNavigation, formWithErrors))),
+
+          registerData   => {
+
+            // actually do the register:
+
+            //  a) Could check email address existence and error if it doesn't exist
+            //  b) If email address OK, check to see if it is an existing user, and either:
+            //     i) Find the existing user's GUID and send them an email; OR
+            //    ii) Create a new user, generating the GUID, and send them an email
+
+
+            // create the email from the template:
+
+            dbService.addOrFindUser(registerData.email)
+              .map { user =>
+                send a Mail (
+                  from = "line-learning@rhyssoft.com" -> "Line Learning",
+                  to = user.email,
+                  cc = "line-learning@rhyssoft.com",
+                  subject = "RhysSoft Line Learning Registration",
+                  message = views.html.email.register_text(user).toString,
+                  richMessage = Some(views.html.email.register(user).toString)
+                )
+                user
+              }
+              .map { user =>
+                Redirect(routes.ScenesController.list())
+                  .withCookies(Cookie(CookieHelper.COOKIE_NAME, user.toString))
+              }
+              .recover {
+                case e: Exception =>
+                  Logger.error(e.getMessage, e)
+                  Redirect(routes.UserController.index()).flashing("failure" -> e.getMessage)
+              }
           }
-          .recover {
-            case e: Exception =>
-              Logger.error(e.getMessage, e)
-              Redirect(routes.UserController.index()).flashing("failure" -> e.getMessage)
-          }
-      }
-    )
+        )
+    }
   }
 
-  def login = Action {
-    Ok(views.html.login(loginForm, buildNavigation(None, showSceneNav = false)))
-      .withNewSession
+  def login = Action { implicit request =>
+    request.cookies.get(COOKIE_NAME) match {
+      case Some(_) =>
+        Redirect(routes.Application.index())
+      case None =>
+        Ok(views.html.login(loginForm, buildNavigation(None, showSceneNav = false)))
+          .discardingCookies(DiscardingCookie(CookieHelper.COOKIE_NAME))
+    }
   }
 
   def loginPost() = Action.async { implicit request =>
@@ -64,7 +94,7 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
       loginData =>
         dbService.findUser(loginData.email, loginData. password)
           .map(user => {
-            Redirect(routes.Application.index)
+            Redirect(routes.Application.index())
               .withCookies(Cookie(CookieHelper.COOKIE_NAME, user.toString))
           })
           .recover{ case _ =>

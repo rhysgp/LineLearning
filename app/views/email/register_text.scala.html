@@ -1,0 +1,13 @@
+@(user: db.User)(implicit request: Request[AnyContent])
+RhysSoft LineLearning - Registration
+====================================
+
+Line  Registration
+------------------
+
+Welcome to Line Learning. To access your new account, please click here:
+
+Email address: @user.email
+Password: @user.password
+
+You should change your password here: @routes.UserController.passwordChange().absoluteURL() after logging in.

@@ -5,7 +5,7 @@ import support.CookieHelper._
 
 class Application extends Controller {
 
-  def index = Action { implicit request =>
+  def index() = Action { implicit request =>
 
     request.cookies.get(COOKIE_NAME) match {
 
