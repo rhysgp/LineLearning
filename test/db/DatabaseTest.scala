@@ -12,7 +12,7 @@ class DatabaseTest @Inject() (dbConfigProvider: DatabaseConfigProvider) extends 
 
     val dbService = new SlickDbService(dbConfigProvider)
     dbService.createDb()
-    val futureTestUser = dbService.addOrFindUser("test@example.com")
+    val futureTestUser = dbService.createUser("test@example.com")
     val testUser = await(futureTestUser)
 
     "have correct email address on creation" in { testUser.email must beEqualTo("test@example.com") }
@@ -22,7 +22,7 @@ class DatabaseTest @Inject() (dbConfigProvider: DatabaseConfigProvider) extends 
     }
 
     "have unique id on creation" in {
-      val futureTest2User = dbService.addOrFindUser("test2@example.com")
+      val futureTest2User = dbService.createUser("test2@example.com")
       val test2User = await(futureTest2User)
 
       test2User.id must not(beNull)
@@ -31,7 +31,7 @@ class DatabaseTest @Inject() (dbConfigProvider: DatabaseConfigProvider) extends 
     }
 
     "be able to be retrieved by email" in {
-      val futureTest3User = dbService.addOrFindUser("test@example.com")
+      val futureTest3User = dbService.createUser("test@example.com")
       val test3User = await(futureTest3User)
 
       test3User.id must be_==(testUser.id)

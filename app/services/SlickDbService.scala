@@ -28,11 +28,12 @@ trait DbServiceAsync {
 
   def setCueLines(sceneId: String, newLines: Lines): Future[Seq[CueLine]]
 
-  def addOrFindUser(email: String): Future[User]
+  def createUser(email: String): Future[User]
 
   def findUser(email: String, password: String): Future[User]
 
   def changePassword(email: String, oldPassword: String, newPassword: String): Future[Unit]
+  def resetPassword(email: String): Future[String]
 }
 
 class SceneNotFoundException(val sceneName: Scene) extends Exception
@@ -140,29 +141,16 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
     ).map(_ => Unit)
   }
 
-  override def addOrFindUser(email: String): Future[db.User] = {
+  override def createUser(email: String): Future[db.User] = {
 
     if (!created) {
       createDb()
       created = true
     }
 
-    /*
-     * The following, I think, isn't necessarily done in one transaction.
-     * I need to work out how to set the transaction boundaries for this
-     * kind of thing.
-     */
-
-    dbConfig.db.run(DbData.findUserByEmail(email).result.headOption)
-      .flatMap{
-        case Some(user: User) =>
-          Future(user)
-        case None =>
-          val userId = UUID.randomUUID().toString
-          val user = User(userId, email, "password")
-          dbConfig.db.run(DbData.createUser(user))
-            .map(x => user)
-      }
+    val user = User(UUID.randomUUID().toString, email, UUID.randomUUID().toString)
+    dbConfig.db.run(DbData.createUser(user))
+      .map(x => user)
   }
 
   def findUser(email: String, password: String): Future[User] = {
@@ -176,6 +164,19 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
       DbData.users.filter(user => user.email === email && user.password === oldPassword).map(_.password).update(newPassword)
     ).map(updateCount => {
       if (updateCount == 0) throw new PasswordChangeException()
+    })
+  }
+
+  def resetPassword(email: String): Future[String] = {
+    val newPassword = UUID.randomUUID().toString
+    dbConfig.db.run(
+      DbData.users.filter(user => user.email === email).map(_.password).update(newPassword)
+    ).map(updateCount => {
+      if (updateCount == 1) {
+        newPassword
+      } else {
+        throw new NoSuchUserException(email)
+      }
     })
   }
 

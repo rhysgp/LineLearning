@@ -7,14 +7,14 @@
     <body>
         <h1>Line  Registration</h1>
         <p>
-            Welcome to Line Learning. To access your new account, please click here:
+            Welcome to Line Learning. To access your new account, please click <a href="@routes.Application.index().absoluteURL()">here</a>.
         </p>
         <p>
            Email address: @user.email<br>
            Password: @user.password
         </p>
         <p>
-            You should change your password here: @routes.UserController.passwordChange().absoluteURL() after logging in.
+            You should change your password <a href="@routes.UserController.passwordChange().absoluteURL()">here</a> after logging in.
         </p>
     </body>
 </html>

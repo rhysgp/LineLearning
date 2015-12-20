@@ -5,8 +5,11 @@
 # Home page
 GET     /login                 controllers.UserController.login()
 POST    /login                 controllers.UserController.loginPost()
+GET     /logout                controllers.UserController.logout()
 GET     /passwordChange        controllers.UserController.passwordChange()
 POST    /passwordChange        controllers.UserController.passwordChangePost()
+GET     /resetPassword         controllers.UserController.resetPassword()
+POST    /resetPassword         controllers.UserController.resetPasswordPost()
 
 GET     /                      controllers.Application.index
 GET     /list/:sceneId         controllers.PromptController.list(sceneId: String)
@@ -16,8 +19,8 @@ POST    /deleteScene           controllers.ScenesController.delete
 POST    /cueLine/delete        controllers.PromptController.delete
 #GET     /lines                     controllers.LinesController.lines
 #POST    /lines                     controllers.LinesController.saveLines
-GET     /register              @controllers.UserController.index
-POST    /register                  @controllers.UserController.register
+GET     /register              @controllers.UserController.register
+POST    /register                  @controllers.UserController.registerPost
 
 GET     /scenes                    controllers.ScenesController.list
 POST    /addScene                  controllers.ScenesController.addScene

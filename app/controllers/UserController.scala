@@ -21,11 +21,11 @@ import services.mail._
 
 class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbServiceAsync) extends Controller with I18nSupport {
 
-  def index() = Action { implicit request =>
+  def register() = Action { implicit request =>
     Ok(views.html.register(noNavigation, registerForm))
   }
 
-  def register() = Action.async { implicit request =>
+  def registerPost() = Action.async { implicit request =>
 
     request.cookies.get(COOKIE_NAME) match {
 
@@ -49,7 +49,7 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
 
             // create the email from the template:
 
-            dbService.addOrFindUser(registerData.email)
+            dbService.createUser(registerData.email)
               .map { user =>
                 send a Mail (
                   from = "line-learning@rhyssoft.com" -> "Line Learning",
@@ -62,13 +62,14 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
                 user
               }
               .map { user =>
-                Redirect(routes.ScenesController.list())
-                  .withCookies(Cookie(CookieHelper.COOKIE_NAME, user.toString))
+                Redirect(routes.Application.index())
               }
               .recover {
                 case e: Exception =>
                   Logger.error(e.getMessage, e)
-                  Redirect(routes.UserController.index()).flashing("failure" -> e.getMessage)
+                  Redirect(routes.UserController.register())
+                    .flashing("failure" ->
+                      s"""Failed to register you. You may already be registered. Try sending yourself a new password by going here: <a href="${routes.UserController.registerPost()}"></a>""")
               }
           }
         )
@@ -147,6 +148,45 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
     }
   }
 
+  def resetPassword() = Action { implicit request =>
+    request.cookies.get(COOKIE_NAME) match {
+      case Some(cookie) =>
+        Redirect(routes.Application.index())
+      case None =>
+        Ok(views.html.resetPassword(resetPasswordForm, buildNavigation(None, showSceneNav = false)))
+    }
+  }
+
+  def resetPasswordPost() = Action.async { implicit request =>
+    request.cookies.get(COOKIE_NAME) match {
+      case Some(cookie) =>
+        Future(Redirect(routes.Application.index()))
+      case None =>
+        resetPasswordForm.bindFromRequest().fold(
+          formWithErrors =>
+            Future(Ok(views.html.resetPassword(formWithErrors, buildNavigation(None, showSceneNav = false)))),
+          formData =>
+            dbService.resetPassword(formData.email)
+              .map(password => {
+                val user = User("", formData.email, password)
+                send a Mail (
+                  from = "line-learning@rhyssoft.com" -> "Line Learning",
+                  to = formData.email,
+                  cc = "line-learning@rhyssoft.com",
+                  subject = "RhysSoft Line Learning Registration",
+                  message = views.html.email.register_text(user).toString,
+                  richMessage = Some(views.html.email.register(user).toString)
+                )
+              })
+              .map(mailId => Redirect(routes.UserController.login()).flashing("success" -> "Check your email for your new password"))
+        )
+    }
+  }
+
+  def logout() = Action { implicit request =>
+    Redirect(routes.Application.index())
+      .discardingCookies(DiscardingCookie(CookieHelper.COOKIE_NAME))
+  }
 
 //  val passwordCheckConstraint: Constraint[String] = Constraint("constraints.passwordcheck")({
 //    plainText =>
@@ -182,8 +222,15 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
       "retyped_new_password" -> nonEmptyText(minLength = 6)
     )(PasswordChange.apply)(PasswordChange.unapply)//.verifying(pw => pw.newPassword == pw.oldPassword)
   )
+
+  val resetPasswordForm = Form(
+    mapping(
+      "email" -> email
+    )(ResetPassword.apply)(ResetPassword.unapply)
+  )
 }
 
 case class Register(email: String)
 case class Login(email: String, password: String)
 case class PasswordChange(oldPassword: String, newPassword: String, reTypedNewPassword: String)
+case class ResetPassword(email: String)

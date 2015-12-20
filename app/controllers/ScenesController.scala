@@ -28,10 +28,10 @@ class ScenesController @Inject() (dbService: DbServiceAsync) extends Controller 
           Ok(views.html.scenes(buildNavigation(Option(user)), scenes, sceneForm))
         } recover {
           case t =>
-            Redirect(routes.UserController.register()).flashing("failure" -> t.getMessage)
+            Redirect(routes.UserController.registerPost()).flashing("failure" -> t.getMessage)
         }
       case None =>
-        Future(Redirect(routes.UserController.register()))
+        Future(Redirect(routes.UserController.registerPost()))
     }
   }
 
@@ -61,7 +61,7 @@ class ScenesController @Inject() (dbService: DbServiceAsync) extends Controller 
         )
 
       case None =>
-        Future(Redirect(routes.UserController.register()))
+        Future(Redirect(routes.UserController.registerPost()))
     }
   }
 
@@ -80,7 +80,7 @@ class ScenesController @Inject() (dbService: DbServiceAsync) extends Controller 
           }
         )
       case None =>
-        Future(Redirect(routes.UserController.register()))
+        Future(Redirect(routes.UserController.registerPost()))
     }
   }
 

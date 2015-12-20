@@ -43,7 +43,7 @@ class PromptController @Inject() (dbService: DbServiceAsync) extends Controller 
           }
 
       case None =>
-        Future(Redirect(routes.UserController.register()))
+        Future(Redirect(routes.UserController.registerPost()))
     }
   }
 
@@ -64,7 +64,7 @@ class PromptController @Inject() (dbService: DbServiceAsync) extends Controller 
         }
 
       case None =>
-        Future(Redirect(routes.UserController.register()))
+        Future(Redirect(routes.UserController.registerPost()))
     }
   }
 
@@ -81,7 +81,7 @@ class PromptController @Inject() (dbService: DbServiceAsync) extends Controller 
         }
 
       case None =>
-        Future(Redirect(routes.UserController.register()))
+        Future(Redirect(routes.UserController.registerPost()))
     }
   }
   
@@ -116,7 +116,7 @@ class PromptController @Inject() (dbService: DbServiceAsync) extends Controller 
         )
 
       case None =>
-        Future(Redirect(routes.UserController.register()))
+        Future(Redirect(routes.UserController.registerPost()))
     }
   }
 

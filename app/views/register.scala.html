@@ -2,12 +2,14 @@
 @(navigation: Navigation, form: Form[Register])(implicit flash: Flash, messages: Messages)
 @main("Register", navigation) {
 
-    @flashMessages(flash)
-
     <div class="container">
+
+        @flash.get("failure").map { m =>
+            @msg.alreadyRegistered()
+        }.getOrElse("")
+
         <div id="inputPrompt">
-            <form id="registerForm" method="post" action="@routes.UserController.register()">
-                @*<h2>Register</h2>*@
+            <form id="registerForm" method="post" action="@routes.UserController.registerPost()">
                 @defining(form("email")) { field =>
                     @defining(if (field.hasErrors) { "form-group has-error" } else { "form-group" }) { formGroupClass =>
                         <div class="@formGroupClass">
