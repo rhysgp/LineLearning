@@ -6,7 +6,7 @@ import javax.inject.{Inject, Singleton}
 import com.google.inject.ImplementedBy
 import db._
 import model.Lines
-import play.api.Logger
+import play.api.{Configuration, Logger}
 import play.api.db.slick.DatabaseConfigProvider
 import slick.driver.JdbcProfile
 
@@ -45,12 +45,12 @@ class PasswordChangeException extends Exception
 
 
 @Singleton
-class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extends DbServiceAsync {
+class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, configuration: Configuration) extends DbServiceAsync {
 
-  val dbConfig = dbConfigProvider.get[JdbcProfile]
+  private val dbConfig = dbConfigProvider.get[JdbcProfile]
+  private val shouldCreateDb = configuration.getBoolean("slickdb.create").contains(true)
 
   import dbConfig.driver.api._
-
   import scala.concurrent.ExecutionContext.Implicits.global
 
   @volatile var created = false
@@ -181,7 +181,10 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider) extend
   }
 
   def createDb(): Unit = {
-    println("***** createDb() *****")
-    dbConfig.db.run(DBIO.seq(DbData.schemaCreate))
+    if (shouldCreateDb) {
+      println("***** createDb() *****")
+      dbConfig.db.run(DBIO.seq(DbData.schemaCreate))
+    }
+
   }
 }
