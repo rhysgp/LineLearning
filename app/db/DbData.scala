@@ -28,7 +28,10 @@ object DbData {
     DbData.users += user
   }
 
-  def schemaCreate = (users.schema ++ scenes.schema ++ cueLines.schema).create
+  def schemaCreate = {
+//    println((users.schema ++ scenes.schema ++ cueLines.schema).createStatements.mkString(";\n"))
+    (users.schema ++ scenes.schema ++ cueLines.schema).create
+  }
 
 }
 
@@ -63,7 +66,7 @@ class CueLines(tag: Tag) extends Table[CueLine](tag, "cue_line") {
   def id = column[String]("id", O.PrimaryKey)
   def cue = column[String]("cue")
   def line = column[String]("line")
-  def order = column[Int]("order")
+  def order = column[Int]("ord")
   def sceneId = column[String]("scene_id")
   def sceneFk = foreignKey("scene_fk", sceneId, scenes)(_.id)
   def sceneOrderIdx = index("scene_id_order_index", (sceneId, order), unique = true)
