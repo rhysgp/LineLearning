@@ -1,3 +1,5 @@
+use line_learning;
+
 CREATE TABLE user (
   id       CHAR(40) NOT NULL PRIMARY KEY,
   email    VARCHAR(255) NOT NULL,
