@@ -6,6 +6,7 @@ import javax.inject.{Inject, Singleton}
 import com.google.inject.ImplementedBy
 import db._
 import model.Lines
+import org.mindrot.jbcrypt.BCrypt
 import play.api.{Configuration, Logger}
 import play.api.db.slick.DatabaseConfigProvider
 import slick.driver.JdbcProfile
@@ -53,7 +54,7 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
   import dbConfig.driver.api._
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  @volatile var created = false
+  createDb()
 
   override def scene(sceneId: String): Future[Scene] = {
     dbConfig.db.run(DbData.findSceneById(sceneId).result.head)
@@ -143,34 +144,43 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
 
   override def createUser(email: String): Future[db.User] = {
 
-    if (!created) {
-      createDb()
-      created = true
-    }
-
-    val user = User(UUID.randomUUID().toString, email, UUID.randomUUID().toString)
+    val password = UUID.randomUUID().toString
+    val encryptedPassword = BCrypt.hashpw(password, BCrypt.gensalt())
+    val user = User(encryptedPassword, email, UUID.randomUUID().toString)
     dbConfig.db.run(DbData.createUser(user))
       .map(x => user)
   }
 
   def findUser(email: String, password: String): Future[User] = {
-    dbConfig.db.run(
-      DbData.users.filter(user => user.email === email && user.password === password).result
-    ).map(_.head)
+    dbConfig.db.run(DbData.users.filter(user => user.email === email).result)
+      .map(_.head)
+      .filter(user =>
+        BCrypt.checkpw(password, user.password)
+      )
   }
 
   def changePassword(email: String, oldPassword: String, newPassword: String): Future[Unit] = {
-    dbConfig.db.run(
-      DbData.users.filter(user => user.email === email && user.password === oldPassword).map(_.password).update(newPassword)
-    ).map(updateCount => {
-      if (updateCount == 0) throw new PasswordChangeException()
-    })
+    val newEncryptedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt())
+    dbConfig.db.run(DbData.users.filter(user => user.email === email).result)
+      .map(_.head)
+      .filter(user => BCrypt.checkpw(oldPassword, user.password))
+      .flatMap(user => {
+        dbConfig.db.run(
+          DbData.users.filter(user => user.email === email).map(_.password).update(newEncryptedPassword)
+        ).map(updateCount => {
+          if (updateCount == 0) throw new PasswordChangeException()
+        })
+      })
+      .recover{
+        case _ => throw new PasswordChangeException()
+      }
   }
 
   def resetPassword(email: String): Future[String] = {
     val newPassword = UUID.randomUUID().toString
+    val encryptedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt())
     dbConfig.db.run(
-      DbData.users.filter(user => user.email === email).map(_.password).update(newPassword)
+      DbData.users.filter(user => user.email === email).map(_.password).update(encryptedPassword)
     ).map(updateCount => {
       if (updateCount == 1) {
         newPassword
@@ -185,6 +195,5 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
       println("***** createDb() *****")
       dbConfig.db.run(DBIO.seq(DbData.schemaCreate))
     }
-
   }
 }

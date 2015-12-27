@@ -21,7 +21,8 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-nop" % "1.6.4",
   "com.h2database" % "h2" % "1.4.190",
   "org.apache.commons" % "commons-email" % "1.4",
-  "mysql" % "mysql-connector-java" % "5.1.38"
+  "mysql" % "mysql-connector-java" % "5.1.38",
+  "org.mindrot" % "jbcrypt" % "0.3m"
 )
 
 // Play provides two styles of routers, one expects its actions to be injected, the

@@ -10,7 +10,7 @@ class DatabaseTest @Inject() (dbConfigProvider: DatabaseConfigProvider) extends 
 
   "a user" should new WithApplication with WithDatabaseConfig {
 
-    val dbService = new SlickDbService(dbConfigProvider)
+    val dbService = new SlickDbService(dbConfigProvider, null)
     dbService.createDb()
     val futureTestUser = dbService.createUser("test@example.com")
     val testUser = await(futureTestUser)
