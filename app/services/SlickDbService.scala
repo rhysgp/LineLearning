@@ -147,6 +147,7 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
     val password = UUID.randomUUID().toString
     val encryptedPassword = BCrypt.hashpw(password, BCrypt.gensalt())
     val user = User(encryptedPassword, email, UUID.randomUUID().toString)
+    Logger.info(s"${user.id} ${user.email} ${user.password}")
     dbConfig.db.run(DbData.createUser(user))
       .map(x => user)
   }
