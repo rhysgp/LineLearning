@@ -1,3 +1,6 @@
+
+create database line_learning;
+
 use line_learning;
 
 CREATE TABLE user (
