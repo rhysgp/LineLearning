@@ -21,8 +21,8 @@ CREATE UNIQUE INDEX name_user_index ON scene (name, user_id);
 
 CREATE TABLE cue_line (
   id       CHAR(40) NOT NULL PRIMARY KEY,
-  cue      VARCHAR(32727) NOT NULL,
-  line     VARCHAR(32727) NOT NULL,
+  cue      VARCHAR(32720) NOT NULL,
+  line     VARCHAR(32720) NOT NULL,
   ord      INTEGER NOT NULL,
   scene_id CHAR(40) NOT NULL
 );
