@@ -103,7 +103,7 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
   override def saveCueLine(cl: CueLine): Future[Seq[CueLine]] = ???
 
   override def loadCueLines(sceneId: String): Future[Seq[CueLine]] = {
-    dbConfig.db.run(DbData.cueLines.filter(_.sceneId === sceneId).result)
+    dbConfig.db.run(DbData.cueLines.filter(_.sceneId === sceneId).sortBy(_.order.desc).result)
   }
 
   override def loadScenes(user: User): Future[Seq[Scene]] = {
@@ -119,7 +119,7 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
     dbConfig.db.run(DbData.userExists(user.id).result)
       .flatMap{ exists =>
         if (!exists) throw new NoSuchUserException(user.email)
-        dbConfig.db.run(DbData.findUserScenes(user.id).result)
+        dbConfig.db.run(DbData.findUserScenes(user.id).sortBy(_.name.desc).result)
       }
   }
 
