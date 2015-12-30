@@ -31,7 +31,7 @@ class Application extends Controller {
         Ok(views.html.home(buildNavigation(Option(user), showSceneNav = true)))
 
       case None =>
-        Ok(views.html.home(noNavigation))
+        Ok(views.html.homeWithoutLogin(noNavigation))
 
     }
   }
