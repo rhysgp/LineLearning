@@ -25,7 +25,7 @@ trait DbServiceAsync {
   def loadCueLines(sceneId: String): Future[Seq[CueLine]]
   def addCueLine(sceneId: String, cl: CueLine): Future[Boolean]
   def removeCueLine(sceneId: String, cueLineId: String): Future[Boolean]
-  def saveCueLine(cl: CueLine): Future[Seq[CueLine]]
+  def saveCueLine(cl: CueLine): Future[Int]
 
   def setCueLines(sceneId: String, newLines: Lines): Future[Seq[CueLine]]
 
@@ -100,7 +100,10 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
   }
 
   override def setCueLines(sceneId: String, newLines: Lines): Future[Seq[CueLine]] = ???
-  override def saveCueLine(cl: CueLine): Future[Seq[CueLine]] = ???
+
+  override def saveCueLine(cl: CueLine): Future[Int] = {
+    dbConfig.db.run(DbData.cueLines.filter(_.id === cl.id).map(row => (row.cue, row.line)).update((cl.cue, cl.line)))
+  }
 
   override def loadCueLines(sceneId: String): Future[Seq[CueLine]] = {
     dbConfig.db.run(DbData.cueLines.filter(_.sceneId === sceneId).sortBy(_.order.asc).result)
