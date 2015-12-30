@@ -142,11 +142,10 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
     ).map(_ => Unit)
   }
 
-  override def createUser(email: String): Future[db.User] = {
-
+  override def createUser(email: String): Future[db.User] = {Fix
     val password = UUID.randomUUID().toString
     val encryptedPassword = BCrypt.hashpw(password, BCrypt.gensalt())
-    val user = User(encryptedPassword, email, UUID.randomUUID().toString)
+    val user = User(UUID.randomUUID().toString, email, encryptedPassword)
     Logger.info(s"${user.id} ${user.email} ${user.password}")
     dbConfig.db.run(DbData.createUser(user))
       .map(x => user)
