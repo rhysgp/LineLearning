@@ -6,7 +6,7 @@ import db._
 
 object NavigationHelper {
 
-  private val home = NavItem("Home", routes.Application.index())
+  private val home = NavItem("Home", routes.Application.home())
 
   def noNavigation = Navigation(None, Seq(home))
 

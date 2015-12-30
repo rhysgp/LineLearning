@@ -12,7 +12,8 @@ GET     /resetPassword         controllers.UserController.resetPassword()
 POST    /resetPassword         controllers.UserController.resetPasswordPost()
 GET     /registered            controllers.UserController.registered()
 
-GET     /                      controllers.Application.index
+GET     /                      controllers.Application.index()
+GET     /home                  controllers.Application.home()
 GET     /list/:sceneId         controllers.PromptController.list(sceneId: String)
 #GET     /edit                      controllers.PromptController.edit()
 POST    /edit                  controllers.PromptController.add

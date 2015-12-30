@@ -1,0 +1,28 @@
+@import model.Navigation
+@(navigation: Navigation)(implicit flash: Flash)
+@main("RhysSoft - Line Learning", navigation) {
+    <div class="container">
+        <h2>
+            Line Learning
+        </h2>
+        <p>
+            This is a simple application to help you learn your cue lines.
+        </p>
+        <p>
+            To start, first create a <strong>Scene</strong>. Click <i>Scene</i> from the menu above and select the
+            <i>Create scene</i> button.
+        </p>
+        <p>
+            Once you have added a scene, you can add Cue Lines to it. Select the scene from the list using its name.
+            Then select the <i>Add cue line</i> button. Enter a cue, then your first line following the cue, and press
+            <i>OK</i>.
+        </p>
+        <p>
+            To test your lines, click the <strong>Run</strong> button either from the <i>Cue lines</i> page or from
+            the <i>Scenes</i> page.
+        </p>
+        <p>
+            <strong>Top tip.</strong> To keep things simple, don't add punctuation!
+        </p>
+    </div>
+}

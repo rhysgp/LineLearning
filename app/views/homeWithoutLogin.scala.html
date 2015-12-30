@@ -1,0 +1,21 @@
+@import model.Navigation
+@(navigation: Navigation)(implicit flash: Flash)
+@main("RhysSoft - Line Learning", navigation) {
+    <div class="container">
+        <h2>
+            Line Learning
+        </h2>
+        <p>
+            This is a simple application to help you learn your cue lines.
+        </p>
+        <p>
+            If you have not already registered, you can <a href="@routes.UserController.register()">register here</a>.
+        </p>
+        <p>
+            If you have already registered, you can <a href="@routes.UserController.login()">log in here</a>.
+        </p>
+        <p>
+            If you have forgotten your password, you can <a href="@routes.UserController.resetPassword()">reset your password here</a>.
+        </p>
+    </div>
+}
