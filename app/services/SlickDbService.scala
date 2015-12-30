@@ -107,15 +107,6 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
   }
 
   override def loadScenes(user: User): Future[Seq[Scene]] = {
-
-
-    dbConfig.db.run(DbData.users.result).map(results => {
-      println("---- users ----")
-      results.map(user => s"${user.id} --> ${user.email}")
-      println("---------------")
-    })
-
-
     dbConfig.db.run(DbData.userExists(user.id).result)
       .flatMap{ exists =>
         if (!exists) throw new NoSuchUserException(user.email)
@@ -135,8 +126,6 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
 
     val sceneId = UUID.randomUUID().toString
 
-    println(s"====---> Inserting ($sceneId, $sceneName, ${user.id})")
-
     dbConfig.db.run(
       DbData.scenes += db.Scene(sceneId, sceneName, user.id)
     ).map(_ => Unit)
@@ -146,7 +135,6 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
     val password = UUID.randomUUID().toString
     val encryptedPassword = BCrypt.hashpw(password, BCrypt.gensalt())
     val user = User(UUID.randomUUID().toString, email, encryptedPassword)
-    Logger.info(s"${user.id} ${user.email} ${user.password}")
     dbConfig.db.run(DbData.createUser(user))
       .map(x => user.copy(password = password))
   }
@@ -192,7 +180,6 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
 
   def createDb(): Unit = {
     if (shouldCreateDb) {
-      println("***** createDb() *****")
       dbConfig.db.run(DBIO.seq(DbData.schemaCreate))
     }
   }

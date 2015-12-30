@@ -21,9 +21,7 @@ class ScenesController @Inject() (dbService: DbServiceAsync) extends Controller 
   def list() = Action.async { implicit request =>
     request.cookies.get(COOKIE_NAME) match {
       case Some(cookie) =>
-        println(cookie.value)
         val user: User = cookie.value
-        println(user)
         dbService.loadScenes(user).map{ scenes =>
           Ok(views.html.scenes(buildNavigation(Option(user)), scenes, sceneForm))
         } recover {

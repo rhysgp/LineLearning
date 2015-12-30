@@ -29,7 +29,6 @@ object DbData {
   }
 
   def schemaCreate = {
-//    println((users.schema ++ scenes.schema ++ cueLines.schema).createStatements.mkString(";\n"))
     (users.schema ++ scenes.schema ++ cueLines.schema).create
   }
 
