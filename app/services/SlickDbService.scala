@@ -148,7 +148,7 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
     val user = User(UUID.randomUUID().toString, email, encryptedPassword)
     Logger.info(s"${user.id} ${user.email} ${user.password}")
     dbConfig.db.run(DbData.createUser(user))
-      .map(x => user)
+      .map(x => user.copy(password = password))
   }
 
   def findUser(email: String, password: String): Future[User] = {
