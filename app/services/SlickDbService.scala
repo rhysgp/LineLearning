@@ -103,7 +103,7 @@ class SlickDbService @Inject() (dbConfigProvider: DatabaseConfigProvider, config
   override def saveCueLine(cl: CueLine): Future[Seq[CueLine]] = ???
 
   override def loadCueLines(sceneId: String): Future[Seq[CueLine]] = {
-    dbConfig.db.run(DbData.cueLines.filter(_.sceneId === sceneId).sortBy(_.order.desc).result)
+    dbConfig.db.run(DbData.cueLines.filter(_.sceneId === sceneId).sortBy(_.order.asc).result)
   }
 
   override def loadScenes(user: User): Future[Seq[Scene]] = {
