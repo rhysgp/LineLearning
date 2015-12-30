@@ -4,4 +4,4 @@ import play.api.mvc.Call
 
 case class Navigation(userOpt: Option[db.User], items: Seq[NavItem])
 
-case class NavItem(label: String, link: Call)
+case class NavItem(label: String, link: Call, active: Boolean = false)

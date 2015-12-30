@@ -23,7 +23,7 @@ class ScenesController @Inject() (dbService: DbServiceAsync) extends Controller 
       case Some(cookie) =>
         val user: User = cookie.value
         dbService.loadScenes(user).map{ scenes =>
-          Ok(views.html.scenes(buildNavigation(Option(user)), scenes, sceneForm))
+          Ok(views.html.scenes(buildSceneNavigation(Option(user)), scenes, sceneForm))
         } recover {
           case t =>
             Redirect(routes.UserController.registerPost()).flashing("failure" -> t.getMessage)

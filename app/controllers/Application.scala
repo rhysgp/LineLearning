@@ -28,10 +28,10 @@ class Application extends Controller {
 
       case Some(cookie) =>
         val user: User = cookie.value
-        Ok(views.html.home(buildNavigation(Option(user), showSceneNav = true)))
+        Ok(views.html.home(buildHomeNavigation(Option(user), showSceneNav = true)))
 
       case None =>
-        Ok(views.html.homeWithoutLogin(noNavigation))
+        Ok(views.html.homeWithoutLogin(buildHomeNavigation(None, showSceneNav = false)))
 
     }
   }

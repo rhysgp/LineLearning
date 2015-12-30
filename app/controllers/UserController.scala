@@ -93,7 +93,7 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
       case Some(_) =>
         Redirect(routes.Application.index())
       case None =>
-        Ok(views.html.login(loginForm, buildNavigation(None, showSceneNav = false)))
+        Ok(views.html.login(loginForm, buildSceneNavigation(None, showSceneNav = false)))
           .discardingCookies(DiscardingCookie(CookieHelper.COOKIE_NAME))
     }
   }
@@ -102,7 +102,7 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
 
     loginForm.bindFromRequest().fold(
       formWithErrors =>
-        Future(Ok(views.html.login(formWithErrors, buildNavigation(None)))),
+        Future(Ok(views.html.login(formWithErrors, buildSceneNavigation(None)))),
 
       loginData =>
         dbService.findUser(loginData.email, loginData. password)
@@ -112,7 +112,7 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
           })
           .recover{ case _ =>
             val form = loginForm.fill(loginData.copy(password = ""))
-            Ok(views.html.login(form, buildNavigation(None), loginFailed = true))
+            Ok(views.html.login(form, buildSceneNavigation(None), loginFailed = true))
           }
     )
   }
@@ -122,7 +122,7 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
 
       case Some(cookie) =>
         val user: User = cookie.value
-        Ok(views.html.password(passwordChangeForm, buildNavigation(Option(user))))
+        Ok(views.html.password(passwordChangeForm, buildSceneNavigation(Option(user))))
 
       case None =>
         Redirect(routes.Application.index())
@@ -136,7 +136,7 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
         val user: User = cookie.value
         passwordChangeForm.bindFromRequest().fold(
           formWithErrors =>
-            Future(Ok(views.html.password(formWithErrors, buildNavigation(Option(user))))),
+            Future(Ok(views.html.password(formWithErrors, buildSceneNavigation(Option(user))))),
           formData =>
 
             // CHECK THAT THE TWO NEW PASSWORDS MATCH!!! - OR DO THIS IN THE UI!!!
@@ -145,13 +145,13 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
 
             if (formData.newPassword != formData.reTypedNewPassword) {
               val frm = passwordChangeForm.fill(formData).withError("retyped_new_password", "New passwords don't match")
-              Future(Ok(views.html.password(frm, buildNavigation(Option(user)))))
+              Future(Ok(views.html.password(frm, buildSceneNavigation(Option(user)))))
             } else {
               dbService.changePassword(user.email, formData.oldPassword, formData.newPassword)
                 .map(x => Redirect(routes.Application.index()))
                 .recover{ case t =>
                   Logger.error(t.getMessage, t)
-                  Ok(views.html.password(passwordChangeForm, buildNavigation(Option(user)), failed = true))
+                  Ok(views.html.password(passwordChangeForm, buildSceneNavigation(Option(user)), failed = true))
                 }
             }
         )
@@ -165,7 +165,7 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
       case Some(cookie) =>
         Redirect(routes.Application.index())
       case None =>
-        Ok(views.html.resetPassword(resetPasswordForm, buildNavigation(None, showSceneNav = false)))
+        Ok(views.html.resetPassword(resetPasswordForm, buildSceneNavigation(None, showSceneNav = false)))
     }
   }
 
@@ -176,7 +176,7 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
       case None =>
         resetPasswordForm.bindFromRequest().fold(
           formWithErrors =>
-            Future(Ok(views.html.resetPassword(formWithErrors, buildNavigation(None, showSceneNav = false)))),
+            Future(Ok(views.html.resetPassword(formWithErrors, buildSceneNavigation(None, showSceneNav = false)))),
           formData =>
             dbService.resetPassword(formData.email)
               .map(password => {

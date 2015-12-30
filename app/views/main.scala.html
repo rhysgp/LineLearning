@@ -19,9 +19,8 @@
                     <div id="navbar" class="navbar-collapse collapse">
                         <ul class="nav navbar-nav">
                             @for(i <- 1 to navigation.items.size) {
-                                @defining((i == navigation.items.size, navigation.items(i - 1))) { case(last, navItem) =>
-                                    @defining(if (last) "active" else "") { clazz =>
-
+                                @defining(navigation.items(i - 1)) { navItem =>
+                                    @defining(if (navItem.active) "active" else "") { clazz =>
                                         <li class="@clazz">
                                             <a href="@navItem.link">@navItem.label</a>
                                         </li>

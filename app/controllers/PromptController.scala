@@ -48,7 +48,7 @@ class PromptController @Inject() (dbService: DbServiceAsync) extends Controller 
   }
 
   private def nav(userOpt: Option[User], sceneOpt: Option[Scene]) =
-    buildNavigation(userOpt, showSceneNav = true, sceneName = sceneOpt)
+    buildSceneNavigation(userOpt, showSceneNav = true, sceneName = sceneOpt)
 
   def list(sceneId: String) = Action.async { implicit request =>
     request.cookies.get(COOKIE_NAME) match {
@@ -58,7 +58,7 @@ class PromptController @Inject() (dbService: DbServiceAsync) extends Controller 
 
         dbService.scene(sceneId).flatMap{ scene =>
           dbService.loadCueLines(sceneId).map { lines =>
-            val navigation = buildNavigation(Option(user), sceneName = Option(scene))
+            val navigation = buildSceneNavigation(Option(user), sceneName = Option(scene))
             Ok(views.html.cueLines(navigation, scene, lines, addForm))
           }
         }
@@ -77,7 +77,7 @@ class PromptController @Inject() (dbService: DbServiceAsync) extends Controller 
         val user: User = cookie.value
 
         dbService.loadCueLines(sceneId).map{ lines =>
-          Ok(views.html.add(buildNavigation(Option(user)), addForm, lines))
+          Ok(views.html.add(buildSceneNavigation(Option(user)), addForm, lines))
         }
 
       case None =>
