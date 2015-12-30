@@ -21,8 +21,19 @@ import services.mail._
 
 class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbServiceAsync) extends Controller with I18nSupport {
 
+  private val REGISTERED_EMAIL = "REGISTERED_EMAIL"
+
   def register() = Action { implicit request =>
     Ok(views.html.register(noNavigation, registerForm))
+  }
+
+  def registered() = Action { implicit request =>
+    request.cookies.get(REGISTERED_EMAIL) match {
+      case Some(cookie) =>
+        Ok(views.html.registered(cookie.value, noNavigation))
+      case None =>
+        Redirect(routes.Application.index())
+    }
   }
 
   def registerPost() = Action.async { implicit request =>
@@ -62,7 +73,8 @@ class UserController @Inject()(val messagesApi: MessagesApi, val dbService: DbSe
                 user
               }
               .map { user =>
-                Redirect(routes.Application.index())
+                Redirect(routes.UserController.registered())
+                  .withCookies(Cookie(REGISTERED_EMAIL, user.email, maxAge = Option(300))) // 300 seconds
               }
               .recover {
                 case e: Exception =>

@@ -1,0 +1,18 @@
+@import model.Navigation
+@(email: String, navigation: Navigation)(implicit flash: Flash)
+@main("RhysSoft - Line Learning", navigation) {
+    <div class="container">
+        <p>
+            Thank you for registering for Line Learning.
+        </p>
+        <p>
+            An email has been sent to <strong>@email</strong> that includes your new password. Please check your <i>spam</i>
+            folder if it does not appear in your inbox.
+        </p>
+        <p>
+            Once you have received the email, you should <a href="@routes.UserController.login()">log in</a> and change
+            your password.  Click on the arrow in the top, right-hand corner of the screen and select
+            'Change password'. Use copy-and-paste to enter the 'Old password' from your email (because it's a bit long!).
+        </p>
+    </div>
+}

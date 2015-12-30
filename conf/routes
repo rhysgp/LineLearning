@@ -10,6 +10,7 @@ GET     /passwordChange        controllers.UserController.passwordChange()
 POST    /passwordChange        controllers.UserController.passwordChangePost()
 GET     /resetPassword         controllers.UserController.resetPassword()
 POST    /resetPassword         controllers.UserController.resetPasswordPost()
+GET     /registered            controllers.UserController.registered()
 
 GET     /                      controllers.Application.index
 GET     /list/:sceneId         controllers.PromptController.list(sceneId: String)
